@@ -1,0 +1,16 @@
+menu "SimpleGUI Configuration"
+
+    config SIMPLE_GUI_ENABLE
+        bool "Enable SipleGUI component"
+        default false
+        help
+            if to Enable SipleGUI component.
+
+    config SGUI_GET_POINT_FUNC_EN
+        depends on SIMPLE_GUI_ENABLE
+        bool "Enable Get point function"
+        default false
+        help
+            if to Enable SGUI Get point function.
+endmenu
+
