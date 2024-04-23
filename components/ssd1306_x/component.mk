@@ -1,5 +1,6 @@
 COMPONENT_SRCDIRS := . \
-					src \
-					inc
+					example \
+					interface \
+					src
 
 COMPONENT_ADD_INCLUDEDIRS := $(COMPONENT_SRCDIRS) .

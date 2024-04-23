@@ -1,51 +1,85 @@
+#include <esp_log.h>
 #include <esp_system.h>
 #include <stdio.h>
+#include <driver/adc.h>
+
 #include "esp_task.h"
 #include <freertos/task.h>
-#include "ssd1306.h"
+#include <driver/gpio.h>
+#include "DemoProc.h"
+#include "driver_ssd1306_basic.h"
+#include "AdcKey.h"
+
+#define TAG "EspCodeBase"
+
+void InitGpio()
+{
+
+    gpio_config_t ioConfig;
+    ioConfig.pin_bit_mask = (1ULL << 3);
+    ioConfig.mode = GPIO_MODE_OUTPUT;
+    ioConfig.pull_up_en = 1;
+    ioConfig.intr_type = GPIO_INTR_DISABLE;
+    gpio_config(&ioConfig);
+    gpio_set_level(3, 0);
+
+#ifdef CONFIG_ADC_KEY_ENABLE
+    // ÅäÖÃ GPIO 0 ×÷Îª ADC ÊäÈë
+    gpio_config_t gpio_config1 = {
+        .pin_bit_mask = 1ULL << GPIO_ADC_PIN,
+        .mode = GPIO_MODE_INPUT,
+    };
+    gpio_config(&gpio_config1);
+#endif
+
+}
+
+uint8_t InitDisplay()
+{
+    uint8_t retVal;
+
+    retVal = ssd1306_basic_init(SSD1306_INTERFACE_IIC, 0x3c);
+    if (retVal != 0)
+    {
+        printf("[%s:%d]\n",__FUNCTION__,__LINE__);
+    }
+    else
+    {
+        retVal = ssd1306_basic_clear();
+        if (retVal != 0)
+        {
+            ssd1306_interface_debug_print("ssd1306: clear screen failed.\n");
+            (void)ssd1306_basic_deinit();
+        }
+    }
+
+    return retVal;
+}
+
+void DisplayTask(void* param)
+{
+    if(InitDisplay() == 0)
+    {
+        DemoMainProcess();
+    }
+    else
+    {
+        ESP_LOGE(TAG, "Can  not init display!");
+        return;
+    }
+}
 
 void app_main(void)
 {
-    printf("Hello world\n");
-    SSD1306_t dev;
-    DisplayInit(&dev);
+    InitGpio();
+    xTaskCreate(DisplayTask,"DisplayTask",2048,NULL,1,NULL);
+    xTaskCreate(AdcTask,"AdcTask",2048,NULL,2,NULL);
 
-    vTaskDelay(3000/portTICK_PERIOD_MS);
-    ssd1306_clear_screen(&dev, false);
-    ssd1306_contrast(&dev, 0xff);
-    ssd1306_display_text_x3(&dev, 0, "Hello", 5, false);
-    vTaskDelay(3000/portTICK_PERIOD_MS);
-
-    int i, j;
-    for (i = 0; i < 128; i++)
+    while(true)
     {
-        for (j = 0; j < 64; j++)
-        {
-            _ssd1306_pixel(&dev, i, j,false);
-        }
+        vTaskDelay(1000/portTICK_PERIOD_MS);
     }
-    ssd1306_show_buffer(&dev);
-    vTaskDelay(3000 / portTICK_PERIOD_MS);
 
-    for (i = 5; i < 120; i++)
-    {
-        for (j = 5; j < 50; j++)
-        {
-            _ssd1306_pixel(&dev, i, j,true);
-        }
-    }
-    ssd1306_show_buffer(&dev);
-    vTaskDelay(3000 / portTICK_PERIOD_MS);
-
-    for (i = 50; i < 90; i++)
-    {
-        for (j = 20; j < 45; j++)
-        {
-            _ssd1306_pixel(&dev, i, j,false);
-        }
-    }
-    ssd1306_show_buffer(&dev);
-    vTaskDelay(3000 / portTICK_PERIOD_MS);
-
+    /* Should never run into here */
     esp_restart();
 }

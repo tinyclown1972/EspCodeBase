@@ -1,0 +1,10 @@
+menu "ADC_KEY Configuration"
+
+    config ADC_KEY_ENABLE
+        bool "Enable ADC_KEY component"
+        default false
+        help
+            if to Enable ADC_KEY component.
+
+endmenu
+
