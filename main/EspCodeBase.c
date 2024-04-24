@@ -1,21 +1,38 @@
+#include "esp_task.h"
+#include <driver/adc.h>
+#include <driver/gpio.h>
 #include <esp_log.h>
 #include <esp_system.h>
-#include <stdio.h>
-#include <driver/adc.h>
-
-#include "esp_task.h"
 #include <freertos/task.h>
-#include <driver/gpio.h>
+#include <stdio.h>
+
 #include "DemoProc.h"
 #include "driver_ssd1306_basic.h"
 #include "AdcKey.h"
 
 #define TAG "EspCodeBase"
 
+typedef struct
+{
+    TaskFunction_t pxTaskFunctionPointer;
+    const char *const pcTaskName;
+    const configSTACK_DEPTH_TYPE usStackDepth;
+    void *const pvParameters;
+    UBaseType_t uxPriority;
+    TaskHandle_t *const pxCreatedTask;
+}tTaskNode;
+
+static tTaskNode TaskTbl[] = {
+    {DisplayTask, "DisplayTask", 2048, NULL, 1, NULL},
+    {AdcTask,     "AdcTask",     2048, NULL, 2, NULL}
+};
+
+static const uint8_t u8TaskTblLen = sizeof(TaskTbl)/sizeof(tTaskNode);
+
 void InitGpio()
 {
-
     gpio_config_t ioConfig;
+    memset(&ioConfig, 0, sizeof(gpio_config_t));
     ioConfig.pin_bit_mask = (1ULL << 3);
     ioConfig.mode = GPIO_MODE_OUTPUT;
     ioConfig.pull_up_en = 1;
@@ -24,12 +41,11 @@ void InitGpio()
     gpio_set_level(3, 0);
 
 #ifdef CONFIG_ADC_KEY_ENABLE
-    // ÅäÖÃ GPIO 0 ×÷Îª ADC ÊäÈë
-    gpio_config_t gpio_config1 = {
-        .pin_bit_mask = 1ULL << GPIO_ADC_PIN,
-        .mode = GPIO_MODE_INPUT,
-    };
-    gpio_config(&gpio_config1);
+    // GPIO 0 ADC
+    memset(&ioConfig, 0, sizeof(gpio_config_t));
+    ioConfig.pin_bit_mask = 1ULL << GPIO_ADC_PIN,
+    ioConfig.mode = GPIO_MODE_INPUT,
+    gpio_config(&ioConfig);
 #endif
 
 }
@@ -38,10 +54,10 @@ uint8_t InitDisplay()
 {
     uint8_t retVal;
 
-    retVal = ssd1306_basic_init(SSD1306_INTERFACE_IIC, 0x3c);
+    retVal = ssd1306_basic_init(SSD1306_INTERFACE_IIC, SSD1306_ADDR_SA0_2);
     if (retVal != 0)
     {
-        printf("[%s:%d]\n",__FUNCTION__,__LINE__);
+        ssd1306_interface_debug_print("ssd1306: clear screen failed.\n");
     }
     else
     {
@@ -56,24 +72,27 @@ uint8_t InitDisplay()
     return retVal;
 }
 
-void DisplayTask(void* param)
+uint8_t CreateTask()
 {
-    if(InitDisplay() == 0)
+    uint8_t u8Index = 0;
+
+    for(; u8Index < u8TaskTblLen; u8Index++)
     {
-        DemoMainProcess();
-    }
-    else
-    {
-        ESP_LOGE(TAG, "Can  not init display!");
-        return;
+        xTaskCreate(TaskTbl[u8Index].pxTaskFunctionPointer, \
+                    TaskTbl[u8Index].pcTaskName, \
+                    TaskTbl[u8Index].usStackDepth, \
+                    TaskTbl[u8Index].pvParameters, \
+                    TaskTbl[u8Index].uxPriority, \
+                    TaskTbl[u8Index].pxCreatedTask);
     }
 }
 
 void app_main(void)
 {
     InitGpio();
-    xTaskCreate(DisplayTask,"DisplayTask",2048,NULL,1,NULL);
-    xTaskCreate(AdcTask,"AdcTask",2048,NULL,2,NULL);
+    // xTaskCreate(DisplayTask,"DisplayTask",2048,NULL,1,NULL);
+    // xTaskCreate(AdcTask,"AdcTask",2048,NULL,2,NULL);
+    CreateTask();
 
     while(true)
     {
