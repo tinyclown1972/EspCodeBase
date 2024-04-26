@@ -38,6 +38,14 @@
 #ifndef DRIVER_SSD1306_INTERFACE_H
 #define DRIVER_SSD1306_INTERFACE_H
 
+#ifdef CONFIG_SSD1306_128x64
+    #define SSD_1306_WIDTH 128
+    #define SSD_1306_HEIGHT 64
+#elif CONFIG_SSD1306_128x32
+    #define SSD_1306_WIDTH 128
+    #define SSD_1306_HEIGHT 32
+#endif
+
 #include "driver_ssd1306.h"
 
 #ifdef __cplusplus

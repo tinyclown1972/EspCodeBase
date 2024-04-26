@@ -11,7 +11,7 @@
 
 #include "esp_task.h"
 #include <freertos/task.h>
-
+#include <esp_log.h>
 #include "SGUI_Basic.h"
 #include "driver_ssd1306_basic.h"
 #ifdef _SIMPLE_GUI_IN_VIRTUAL_SDK_
@@ -24,36 +24,38 @@
 //=======================================================================//
 //= Macro definition.                                                   =//
 //=======================================================================//
-#define     BMP_DATA_BUFFER_SIZE    (512)
+#define BMP_DATA_BUFFER_SIZE (512)
 
-extern volatile int  gKeyCode;
+#ifdef CONFIG_ADC_KEY_ENABLE
+extern volatile int gKeyCode;
 extern volatile bool keyTriggered;
+#endif
 
 //=======================================================================//
 //= Static variable declaration.                                        =//
 //=======================================================================//
-SGUI_SCR_DEV                g_stDeviceInterface;
-HMI_SCREEN_OBJECT*          g_arrpstScreenObjs[] =
-                            {
-                                &g_stHMIDemo_List,
-                                &g_stHMIDemo_TextPaint,
-                                &g_stHMIDemo_VariableBox,
-                                &g_stHMIDemo_Menu,
-                                &g_stHMIDemo_Notice,
-                                &g_stHMIDemo_BasicPaint,
-                                &g_stHMIDemo_Curve,
-                            };
-HMI_ENGINE_OBJECT           g_stDemoEngine;
+SGUI_SCR_DEV g_stDeviceInterface;
+HMI_SCREEN_OBJECT *g_arrpstScreenObjs[] =
+    {
+        &g_stHMIDemo_List,
+        &g_stHMIDemo_TextPaint,
+        &g_stHMIDemo_VariableBox,
+        &g_stHMIDemo_Menu,
+        &g_stHMIDemo_Notice,
+        &g_stHMIDemo_BasicPaint,
+        &g_stHMIDemo_Curve,
+};
+HMI_ENGINE_OBJECT g_stDemoEngine;
 
-SGUI_BYTE                   s_pBmpDataBuffer[BMP_DATA_BUFFER_SIZE];
+SGUI_BYTE s_pBmpDataBuffer[BMP_DATA_BUFFER_SIZE];
 //=======================================================================//
 //= Static function declare.                                            =//
 //=======================================================================//
-static void                 KeyPressEventProc(void);
-static void                 RTCEventProc(void);
-static void                 SysTickTimerEventProc(void);
+static void KeyPressEventProc(void);
+static void RTCEventProc(void);
+static void SysTickTimerEventProc(void);
 #ifdef _SIMPLE_GUI_IN_VIRTUAL_SDK_
-static bool                 CheckEventFlag(ENV_FLAG_INDEX eIndex);
+static bool CheckEventFlag(ENV_FLAG_INDEX eIndex);
 #endif //_SIMPLE_GUI_IN_VIRTUAL_SDK_
 
 //=======================================================================//
@@ -85,7 +87,7 @@ void SSD1306FillRect(SGUI_INT iX, SGUI_INT iY, SGUI_INT iWidth, SGUI_INT iHeight
     //     }
     // }
     // return;
-    ssd1306_basic_rect(iX, iY, iX+iWidth, iY+iHeight,iColor);
+    ssd1306_basic_rect(iX, iY, iX + iWidth, iY + iHeight, iColor);
 }
 
 void SSD1306Clear()
@@ -97,6 +99,19 @@ void SSD1306SyncBuffer()
 {
     // ssd1306_show_buffer_x();
     ssd1306_basic_refresh_screen();
+}
+
+void DisplayTask(void *param)
+{
+    if (InitDisplay() == 0)
+    {
+        DemoMainProcess();
+    }
+    else
+    {
+        ESP_LOGE("SGUI", "Failed to init display device!");
+        return;
+    }
 }
 
 #endif
@@ -113,13 +128,13 @@ HMI_ENGINE_RESULT InitializeHMIEngineObj(void)
     /*----------------------------------*/
     /* Variable Declaration             */
     /*----------------------------------*/
-    HMI_ENGINE_RESULT           eProcessResult;
-    int                         iIndex;
+    HMI_ENGINE_RESULT eProcessResult;
+    int iIndex;
 
     /*----------------------------------*/
     /* Initialize                       */
     /*----------------------------------*/
-    eProcessResult =            HMI_RET_NORMAL;
+    eProcessResult = HMI_RET_NORMAL;
 
     /*----------------------------------*/
     /* Process                          */
@@ -151,7 +166,6 @@ HMI_ENGINE_RESULT InitializeHMIEngineObj(void)
     g_stDeviceInterface.stSize.iHeight = 0;
 #error "Forget to enable driver?"
 #endif
-
     /* Initialize interface object. */
     g_stDeviceInterface.fnSetPixel = SSD1306SetPixel;
 #ifdef SGUI_GET_POINT_FUNC_EN
@@ -166,19 +180,16 @@ HMI_ENGINE_RESULT InitializeHMIEngineObj(void)
     do
     {
         /* Prepare HMI engine object. */
-        g_stDemoEngine.ScreenCount = sizeof(g_arrpstScreenObjs)/sizeof(*g_arrpstScreenObjs);
+        g_stDemoEngine.ScreenCount = sizeof(g_arrpstScreenObjs) / sizeof(*g_arrpstScreenObjs);
         g_stDemoEngine.ScreenObjPtr = g_arrpstScreenObjs;
         g_stDemoEngine.Interface = &g_stDeviceInterface;
 
         /* Initialize all screen object. */
-        if(NULL != g_stDemoEngine.ScreenObjPtr)
+        if (NULL != g_stDemoEngine.ScreenObjPtr)
         {
-            for(iIndex=0; iIndex<g_stDemoEngine.ScreenCount; iIndex++)
+            for (iIndex = 0; iIndex < g_stDemoEngine.ScreenCount; iIndex++)
             {
-                if( (NULL != g_stDemoEngine.ScreenObjPtr[iIndex])
-                    && (NULL != g_stDemoEngine.ScreenObjPtr[iIndex]->pstActions)
-                    && (NULL != g_stDemoEngine.ScreenObjPtr[iIndex]->pstActions->Initialize)
-                    )
+                if ((NULL != g_stDemoEngine.ScreenObjPtr[iIndex]) && (NULL != g_stDemoEngine.ScreenObjPtr[iIndex]->pstActions) && (NULL != g_stDemoEngine.ScreenObjPtr[iIndex]->pstActions->Initialize))
                 {
                     g_stDemoEngine.ScreenObjPtr[iIndex]->pstActions->Initialize(&g_stDeviceInterface);
                     g_stDemoEngine.ScreenObjPtr[iIndex]->pstPrevious = NULL;
@@ -187,23 +198,22 @@ HMI_ENGINE_RESULT InitializeHMIEngineObj(void)
         }
         else
         {
-
         }
         /* Active engine object. */
         eProcessResult = HMI_ActiveEngine(&g_stDemoEngine, HMI_SCREEN_ID_DEMO_LIST);
-        if(HMI_PROCESS_FAILED(eProcessResult))
+        if (HMI_PROCESS_FAILED(eProcessResult))
         {
             /* Active engine failed. */
             break;
         }
         /* Start engine process. */
         eProcessResult = HMI_StartEngine(NULL);
-        if(HMI_PROCESS_FAILED(eProcessResult))
+        if (HMI_PROCESS_FAILED(eProcessResult))
         {
             /* Start engine failed. */
             break;
         }
-    }while(0);
+    } while (0);
 
     return eProcessResult;
 }
@@ -223,14 +233,14 @@ bool CheckEventFlag(ENV_FLAG_INDEX eIndex)
     /*----------------------------------*/
     /* Variable Declaration             */
     /*----------------------------------*/
-    bool                    bReturn;
+    bool bReturn;
 
     /*----------------------------------*/
     /* Process                          */
     /*----------------------------------*/
     bReturn = SGUI_SDK_GetEventSyncFlag(eIndex);
 
-    if(true == bReturn)
+    if (true == bReturn)
     {
         SGUI_SDK_SetEvnetSyncFlag(eIndex, false);
     }
@@ -258,20 +268,20 @@ void DemoMainProcess(void)
     /*----------------------------------*/
     /* Process                          */
     /*----------------------------------*/
-    while(1)
+    while (1)
     {
         // Check and process heart-beat timer event.
-        if(true == SysTickTimerTriggered())
+        if (true == SysTickTimerTriggered())
         {
             SysTickTimerEventProc();
         }
         // Check and process key press event.
-        if(true == UserEventTriggered())
+        if (true == UserEventTriggered())
         {
             KeyPressEventProc();
         }
         // Check and process RTC event.
-        if(true == RTCTimerTriggered())
+        if (true == RTCTimerTriggered())
         {
             RTCEventProc();
         }
@@ -292,9 +302,9 @@ void KeyPressEventProc(void)
     /*----------------------------------*/
     /* Variable Declaration             */
     /*----------------------------------*/
-    KEY_PRESS_EVENT         stEvent;
+    KEY_PRESS_EVENT stEvent;
 #ifdef _SIMPLE_GUI_IN_VIRTUAL_SDK_
-    const SDK_KB_EVENT*     pstSDKEvent;
+    const SDK_KB_EVENT *pstSDKEvent;
 #endif // _SIMPLE_GUI_IN_VIRTUAL_SDK_
 
     /*----------------------------------*/
@@ -309,26 +319,30 @@ void KeyPressEventProc(void)
 #ifdef _SIMPLE_GUI_IN_VIRTUAL_SDK_
     pstSDKEvent = SGUI_SDK_GetKeyEventData();
     stEvent.Data.uiKeyValue = pstSDKEvent->iKeyCode;
-    if(pstSDKEvent->bShift)
+    if (pstSDKEvent->bShift)
     {
         stEvent.Data.uiKeyValue |= KEY_OPTION_SHIFT;
     }
-    if(pstSDKEvent->bCtrl)
+    if (pstSDKEvent->bCtrl)
     {
         stEvent.Data.uiKeyValue |= KEY_OPTION_CTRL;
     }
-    if(pstSDKEvent->bAlt)
+    if (pstSDKEvent->bAlt)
     {
         stEvent.Data.uiKeyValue |= KEY_OPTION_ALT;
     }
 #else
     // #error Add key event data prepare process here.
+#ifdef CONFIG_ADC_KEY_ENABLE
     stEvent.Data.uiKeyValue = gKeyCode;
     gKeyCode = KEY_VALUE_NONE;
     keyTriggered = false;
+#else
+    stEvent.Data.uiKeyValue = KEY_VALUE_NONE;
+#endif
 #endif
     // Post key press event.
-    HMI_ProcessEvent((HMI_EVENT_BASE*)(&stEvent));
+    HMI_ProcessEvent((HMI_EVENT_BASE *)(&stEvent));
 }
 
 /*****************************************************************************/
@@ -343,7 +357,7 @@ void SysTickTimerEventProc(void)
     /*----------------------------------*/
     /* Variable Declaration             */
     /*----------------------------------*/
-    DATA_EVENT              stEvent;
+    DATA_EVENT stEvent;
 
     /*----------------------------------*/
     /* Initialize                       */
@@ -353,10 +367,10 @@ void SysTickTimerEventProc(void)
     /*----------------------------------*/
     /* Process                          */
     /*----------------------------------*/
-    stEvent.Head.iID =      EVENT_ID_TIMER;
-    stEvent.Data.iValue = (rand() % 200)-100;
+    stEvent.Head.iID = EVENT_ID_TIMER;
+    stEvent.Data.iValue = (rand() % 200) - 100;
     // Post timer event.
-    HMI_ProcessEvent((HMI_EVENT_BASE*)&stEvent);
+    HMI_ProcessEvent((HMI_EVENT_BASE *)&stEvent);
 }
 
 /*****************************************************************************/
@@ -371,7 +385,7 @@ void RTCEventProc(void)
     /*----------------------------------*/
     /* Variable Declaration             */
     /*----------------------------------*/
-    HMI_GENERAL_EVENT       stEvent;
+    HMI_GENERAL_EVENT stEvent;
 
     /*----------------------------------*/
     /* Initialize                       */
@@ -381,9 +395,9 @@ void RTCEventProc(void)
     /*----------------------------------*/
     /* Process                          */
     /*----------------------------------*/
-    stEvent.Head.iID =      EVENT_ID_RTC;
+    stEvent.Head.iID = EVENT_ID_RTC;
     // Post RTC update message to a screen.
-    HMI_ProcessEvent((HMI_EVENT_BASE*)&stEvent);
+    HMI_ProcessEvent((HMI_EVENT_BASE *)&stEvent);
 }
 
 /*****************************************************************************/
@@ -402,7 +416,7 @@ bool SysTickTimerTriggered(void)
 #ifdef _SIMPLE_GUI_IN_VIRTUAL_SDK_
     return CheckEventFlag(ENV_FLAG_IDX_SDK_TIM_EVENT);
 #else
-    if(count++ == 5)
+    if (count++ == 5)
     {
         count = 0;
         return true;
@@ -450,7 +464,11 @@ bool UserEventTriggered(void)
 #ifdef _SIMPLE_GUI_IN_VIRTUAL_SDK_
     return CheckEventFlag(ENV_FLAG_IDX_SDK_KEY_EVENT);
 #else
+#ifdef CONFIG_ADC_KEY_ENABLE
     return keyTriggered;
+#else
+    return false;
+#endif
 #endif
 }
 
@@ -468,7 +486,7 @@ void SysTickTimerEnable(bool bEnable)
     /* Process                          */
     /*----------------------------------*/
 #ifdef _SIMPLE_GUI_IN_VIRTUAL_SDK_
-    (void)SGUI_SDK_ConfigGeneralTimer(bEnable?DEMO_HEART_BEAT_INTERVAL_MS:0);
+    (void)SGUI_SDK_ConfigGeneralTimer(bEnable ? DEMO_HEART_BEAT_INTERVAL_MS : 0);
 #else
     // #error Add sys-tick timer enable/disable process here.
     /* TODO */
@@ -494,4 +512,3 @@ void RTCTimerEnable(bool bEnable)
     /* TODO */
 #endif
 }
-

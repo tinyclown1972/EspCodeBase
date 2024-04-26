@@ -69,10 +69,11 @@ typedef enum
 /**
  * @brief ssd1306 address pin enumeration definition
  */
-typedef enum  
+typedef enum
 {
-    SSD1306_ADDR_SA0_0 = 0x78,        /**< address pin GND */
-    SSD1306_ADDR_SA0_1 = 0x7A,        /**< address pin VCC */
+    SSD1306_ADDR_SA0_0 = 0x78, /**< address pin GND */
+    SSD1306_ADDR_SA0_1 = 0x7A, /**< address pin VCC */
+    SSD1306_ADDR_SA0_2 = 0x3C, /**< My SSD1306 */
 } ssd1306_address_t;
 
 /**

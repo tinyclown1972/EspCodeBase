@@ -1,0 +1,15 @@
+menu "MgGpio Configuration"
+
+    config MYGPIO_EN
+        bool "Enable MyGpio component"
+        default false
+        help
+            if to Enable MyGpio component.
+
+    config ESP32_C3_LED_ENABLE
+        bool "Enable ESP32 C3 2 LED control"
+        default false
+        help
+            if to Enable control default 2 board LED.
+endmenu
+

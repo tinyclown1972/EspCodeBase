@@ -100,6 +100,7 @@ extern HMI_SCREEN_OBJECT		g_stHMIDemo_PolorCoord;
 extern "C"
 {
 #endif /* __cplusplus */
+void                DisplayTask(void *param);
 HMI_ENGINE_RESULT   InitializeHMIEngineObj(void);
 void                DemoMainProcess(void);
 

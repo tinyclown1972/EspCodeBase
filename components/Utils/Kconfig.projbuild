@@ -1,0 +1,10 @@
+menu "Utils Configuration"
+
+    config UTILS_EN
+        bool "Enable Utils component"
+        default false
+        help
+            if to Enable Utils component.
+
+endmenu
+

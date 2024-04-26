@@ -156,6 +156,31 @@ CONFIG_SGUI_GET_POINT_FUNC_EN=y
 # end of SimpleGUI Configuration
 
 #
+# MgGpio Configuration
+#
+CONFIG_MYGPIO_EN=y
+CONFIG_ESP32_C3_LED_ENABLE=y
+# end of MgGpio Configuration
+
+#
+# Pump Configuration
+#
+CONFIG_PUMP_EN=y
+# end of Pump Configuration
+
+#
+# RTE Configuration
+#
+CONFIG_RTE_EN=y
+# end of RTE Configuration
+
+#
+# Utils Configuration
+#
+CONFIG_UTILS_EN=y
+# end of Utils Configuration
+
+#
 # SSD1306_X Configuration
 #
 CONFIG_SSD1306_X_ENABLE=y
