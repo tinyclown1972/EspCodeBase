@@ -78,6 +78,8 @@ extern "C"{
 #define SSD1306_BASIC_DEFAULT_COLUMN_ADDRESS_RANGE_START       0x00                                       /**< set range start */
 #define SSD1306_BASIC_DEFAULT_COLUMN_ADDRESS_RANGE_END         0x7F                                       /**< set range end */
 
+ uint8_t InitDisplay(void);
+
 /**
  * @brief     basic example init
  * @param[in] interface is the interface type

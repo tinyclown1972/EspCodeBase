@@ -145,7 +145,7 @@ CONFIG_PARTITION_TABLE_MD5=y
 #
 # ADC_KEY Configuration
 #
-# CONFIG_ADC_KEY_ENABLE is not set
+CONFIG_ADC_KEY_ENABLE=y
 # end of ADC_KEY Configuration
 
 #
@@ -154,6 +154,31 @@ CONFIG_PARTITION_TABLE_MD5=y
 CONFIG_SIMPLE_GUI_ENABLE=y
 CONFIG_SGUI_GET_POINT_FUNC_EN=y
 # end of SimpleGUI Configuration
+
+#
+# MgGpio Configuration
+#
+# CONFIG_MYGPIO_EN is not set
+CONFIG_ESP32_C3_LED_ENABLE=y
+# end of MgGpio Configuration
+
+#
+# Pump Configuration
+#
+# CONFIG_PUMP_EN is not set
+# end of Pump Configuration
+
+#
+# RTE Configuration
+#
+# CONFIG_RTE_EN is not set
+# end of RTE Configuration
+
+#
+# Utils Configuration
+#
+# CONFIG_UTILS_EN is not set
+# end of Utils Configuration
 
 #
 # SSD1306_X Configuration

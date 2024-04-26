@@ -109,7 +109,7 @@ void DisplayTask(void *param)
     }
     else
     {
-        ESP_LOGE(TAG, "Failed to init display device!");
+        ESP_LOGE("SGUI", "Failed to init display device!");
         return;
     }
 }

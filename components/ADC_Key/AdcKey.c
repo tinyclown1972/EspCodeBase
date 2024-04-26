@@ -4,17 +4,28 @@
 
 #include "AdcKey.h"
 
+#include <string.h>
 #include <freertos/freertos.h>
 #include <driver/adc.h>
 #include <freertos/task.h>
 
 #include "DemoActions.h"
 
-#define CONFIG_ADC_KEY_ENABLE
 #ifdef CONFIG_ADC_KEY_ENABLE
-
 volatile int  gKeyCode = KEY_VALUE_NONE;
 volatile bool keyTriggered = false;
+
+void AdcInitGpio()
+{
+    gpio_config_t ioConfig;
+#ifdef CONFIG_ADC_KEY_ENABLE
+    // GPIO 0 ADC
+    memset(&ioConfig, 0, sizeof(gpio_config_t));
+    ioConfig.pin_bit_mask = 1ULL << GPIO_ADC_PIN,
+    ioConfig.mode = GPIO_MODE_INPUT,
+    gpio_config(&ioConfig);
+#endif
+}
 
 int GetKeyCodeWithValue(int keyVal)
 {
@@ -44,6 +55,8 @@ void AdcTask(void *pvParameter)
     static int preKeyCode = KEY_VALUE_NONE;
     int currentKeyCode = KEY_VALUE_NONE;
 
+    AdcInitGpio();
+
     // ÅäÖÃ ADC Í¨µÀ
     adc1_config_width(ADC_WIDTH_BIT_12);
     adc1_config_channel_atten(ADC1_CHANNEL_0, ADC_ATTEN_DB_11);
@@ -70,7 +83,6 @@ void AdcTask(void *pvParameter)
             gKeyCode = preKeyCode;
             keyTriggered = true;
             preKeyCode = currentKeyCode;
-            printf("Key enter\n");
         }
 
         vTaskDelay(pdMS_TO_TICKS(50));

@@ -45,6 +45,28 @@ static ssd1306_handle_t gs_handle;        /**< ssd1306 handle */
 
 SemaphoreHandle_t mutex;
 
+uint8_t InitDisplay()
+{
+    uint8_t retVal;
+
+    retVal = ssd1306_basic_init(SSD1306_INTERFACE_IIC, SSD1306_ADDR_SA0_2);
+    if (retVal != 0)
+    {
+        ssd1306_interface_debug_print("ssd1306: clear screen failed.\n");
+    }
+    else
+    {
+        retVal = ssd1306_basic_clear();
+        if (retVal != 0)
+        {
+            ssd1306_interface_debug_print("ssd1306: clear screen failed.\n");
+            (void)ssd1306_basic_deinit();
+        }
+    }
+
+    return retVal;
+}
+
 /**
  * @brief     basic example init
  * @param[in] interface is the interface type

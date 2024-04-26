@@ -1,0 +1,10 @@
+menu "Pump Configuration"
+
+    config PUMP_EN
+        bool "Enable Pump component"
+        default false
+        help
+            if to Enable Pump component.
+
+endmenu
+
