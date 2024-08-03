@@ -21,8 +21,8 @@ int GetKeyCodeWithValue(int keyVal)
     int iIndex;
     const tKeyNode tKeyTbl[] = {
         {KEY_VALUE_ESC, 1300, 1450},
-        {KEY_VALUE_UP, 800, 1000},
-        {KEY_VALUE_DOWN, 600, 750},
+        {KEY_VALUE_DOWN, 800, 1000},
+        {KEY_VALUE_UP, 600, 750},
         {KEY_VALUE_ENTER, 400, 580}
     };
 
@@ -70,7 +70,7 @@ void AdcTask(void *pvParameter)
             gKeyCode = preKeyCode;
             keyTriggered = true;
             preKeyCode = currentKeyCode;
-            printf("Key enter\n");
+            // printf("Key enter\n");
         }
 
         vTaskDelay(pdMS_TO_TICKS(50));

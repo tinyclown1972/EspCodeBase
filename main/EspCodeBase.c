@@ -14,17 +14,16 @@
 
 void InitGpio()
 {
-
     gpio_config_t ioConfig;
     ioConfig.pin_bit_mask = (1ULL << 3);
-    ioConfig.mode = GPIO_MODE_OUTPUT;
+    ioConfig.mode = GPIO_MODE_INPUT_OUTPUT;
     ioConfig.pull_up_en = 1;
     ioConfig.intr_type = GPIO_INTR_DISABLE;
     gpio_config(&ioConfig);
     gpio_set_level(3, 0);
 
 #ifdef CONFIG_ADC_KEY_ENABLE
-    // 配置 GPIO 0 作为 ADC 输入
+    // 閰嶇疆 GPIO 0 浣滀负 ADC 杈撳叆
     gpio_config_t gpio_config1 = {
         .pin_bit_mask = 1ULL << GPIO_ADC_PIN,
         .mode = GPIO_MODE_INPUT,

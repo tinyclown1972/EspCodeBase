@@ -19,13 +19,11 @@
 //= Macro definition.                                                   =//
 //=======================================================================//
 
-#define                     VARIABLE_BOX_WIDTH                  (100)
-#define                     VARIABLE_NUMBER_BOX_HEIGHT          (8)
-#define                     VARIABLE_TEXT_BOX_HEIGHT            (12)
-#define                     VARIABLE_BOX_POSX                   (10)
-#define                     VARIABLE_BOX_NUMBER_POSY            (24)
-#define                     VARIABLE_BOX_TEXT_POSY              (40)
-#define                     VARIABLE_MASK_CHARACTER             ('*')
+#define                     VARIABLE_BOX_WIDTH                  (10)
+#define                     VARIABLE_NUMBER_BOX_HEIGHT          (12)
+#define                     VARIABLE_BOX_POSX                   (60)
+#define                     VARIABLE_BOX_NUMBER_HIGH_POSY       (24)
+#define                     VARIABLE_BOX_NUMBER_LOW_POSY        (40)
 
 //=======================================================================//
 //= Static function declaration.                                        =//
@@ -40,15 +38,13 @@ static void                 HMI_DemoVariableBox_DrawFrame(SGUI_SCR_DEV* pstDevic
 //=======================================================================//
 //= Static variable declaration.                                        =//
 //=======================================================================//
-static SGUI_NUM_VARBOX_STRUCT   s_stNumberVariableBox =     {0x00};
-static const SGUI_CHAR          ASCII_CHAR_SET[] = {" !\"#$%&,()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[/]^_'abcdefghijklmnopqrstuvwxyz{|}`"};
-static SGUI_CHAR                s_szTextVariableBuffer[] =  {"ABCDEFG1234567890+-*/OPQ"};
-static SGUI_TEXT_VARBOX_STRUCT  s_stTextVariableBox =       {0x00};
+static SGUI_INT                 s_HighAndLowFlag;
+static SGUI_NUM_VARBOX_STRUCT   s_stNumberHighBox =     {0x00};
+static SGUI_NUM_VARBOX_STRUCT   s_stNumberLowBox  =     {0x00};
+
 static SGUI_CHAR                s_szDefaultFrameTitle[] =   SCR4_VAR_BOX_TITLE;
 static SGUI_SZSTR               s_szFrameTitle =            s_szDefaultFrameTitle;
-static SGUI_INT                 s_uiFocusedFlag;
-static SGUI_CSZSTR              s_szHelpNoticeText =        SCR4_HELP_NOTICE;
-static SGUI_INT                 s_uiAutoConfirmTimer =      5;
+
 HMI_SCREEN_ACTION               s_stDemoVariableBoxActions = {
                                                                 HMI_DemoVariableBox_Initialize,
                                                                 HMI_DemoVariableBox_Prepare,
@@ -72,35 +68,35 @@ HMI_ENGINE_RESULT HMI_DemoVariableBox_Initialize(SGUI_SCR_DEV* pstDeviceIF)
     /*----------------------------------*/
     /* Variable Declaration             */
     /*----------------------------------*/
-    SGUI_NUM_VARBOX_PARAM   stNumBoxInitParam;
-    SGUI_TEXT_VARBOX_PARAM  stTextBoxInitParam;
+    SGUI_NUM_VARBOX_PARAM   stHighParam;
+    SGUI_NUM_VARBOX_PARAM   stLowParam;
 
     /*----------------------------------*/
     /* Process                          */
     /*----------------------------------*/
-    s_uiFocusedFlag = 0;
+    s_HighAndLowFlag = -1;
 
-    stNumBoxInitParam.eAlignment = SGUI_CENTER;
-    stNumBoxInitParam.iMin = -50;
-    stNumBoxInitParam.iMax = 100;
-    stNumBoxInitParam.pstFontRes = &SGUI_DEFAULT_FONT_8;
-    stNumBoxInitParam.stLayout.iX = VARIABLE_BOX_POSX+2;
-    stNumBoxInitParam.stLayout.iY = VARIABLE_BOX_NUMBER_POSY+2;
-    stNumBoxInitParam.stLayout.iWidth = pstDeviceIF->stSize.iWidth - (VARIABLE_BOX_POSX*2)-4;
-    stNumBoxInitParam.stLayout.iHeight = SGUI_DEFAULT_FONT_8.iHeight;
+    stHighParam.eAlignment = SGUI_CENTER;
+    stHighParam.iMin = -50;
+    stHighParam.iMax = 100;
+    stHighParam.pstFontRes = &SGUI_DEFAULT_FONT_12;
+    stHighParam.stLayout.iX = VARIABLE_BOX_POSX+2;
+    stHighParam.stLayout.iY = VARIABLE_BOX_NUMBER_HIGH_POSY;
+    stHighParam.stLayout.iWidth = 60;
+    stHighParam.stLayout.iHeight = SGUI_DEFAULT_FONT_12.iHeight;
 
-    SGUI_NumberVariableBox_Initialize(&s_stNumberVariableBox, &stNumBoxInitParam);
+    SGUI_NumberVariableBox_Initialize(&s_stNumberHighBox, &stHighParam);
 
-    stTextBoxInitParam.pstFontRes = &SGUI_DEFAULT_FONT_12;
-    stTextBoxInitParam.stLayout.iX = VARIABLE_BOX_POSX+2;
-    stTextBoxInitParam.stLayout.iY = VARIABLE_BOX_TEXT_POSY+2;
-    stTextBoxInitParam.stLayout.iWidth = pstDeviceIF->stSize.iWidth-(VARIABLE_BOX_POSX*2)-4;
-    stTextBoxInitParam.stLayout.iHeight = SGUI_DEFAULT_FONT_12.iHeight;
-    stTextBoxInitParam.iTextLength = SGUI_SystemIF_StringLength(s_szTextVariableBuffer);
-    stTextBoxInitParam.stCharSet.cszCharSet = ASCII_CHAR_SET;
-    stTextBoxInitParam .stCharSet.iSize = 96;
+    stLowParam.eAlignment = SGUI_CENTER;
+    stLowParam.iMin = -50;
+    stLowParam.iMax = 100;
+    stLowParam.pstFontRes = &SGUI_DEFAULT_FONT_12;
+    stLowParam.stLayout.iX = VARIABLE_BOX_POSX+2;
+    stLowParam.stLayout.iY = VARIABLE_BOX_NUMBER_LOW_POSY;
+    stLowParam.stLayout.iWidth = 60;
+    stLowParam.stLayout.iHeight = SGUI_DEFAULT_FONT_12.iHeight;
 
-    SGUI_TextVariableBox_Initialize(&s_stTextVariableBox, &stTextBoxInitParam, s_szTextVariableBuffer);
+    SGUI_NumberVariableBox_Initialize(&s_stNumberLowBox, &stLowParam);
 
     return HMI_RET_NORMAL;
 }
@@ -110,23 +106,17 @@ HMI_ENGINE_RESULT HMI_DemoVariableBox_Prepare(SGUI_SCR_DEV* pstDeviceIF, const v
     /*----------------------------------*/
     /* Variable Declaration             */
     /*----------------------------------*/
-    SGUI_NOTICT_BOX             stNoticeBox;
 
     /*----------------------------------*/
     /* Initialize                       */
     /*----------------------------------*/
-    stNoticeBox.pstIcon = &SGUI_RES_ICON_INFORMATION_16;
-    stNoticeBox.cszNoticeText = s_szHelpNoticeText;
+
     /*----------------------------------*/
     /* Process                          */
     /*----------------------------------*/
     // Draw frame
     s_szFrameTitle = s_szDefaultFrameTitle;
     HMI_DemoVariableBox_DrawFrame(pstDeviceIF, (SGUI_SZSTR)s_szFrameTitle);
-    // Show notice
-    SGUI_Notice_FitArea(pstDeviceIF, &(stNoticeBox.stLayout));
-    SGUI_Notice_Repaint(pstDeviceIF, &stNoticeBox, &SGUI_DEFAULT_FONT_8, 0);
-    // Start RTC
     RTCTimerEnable(true);
     return HMI_RET_NORMAL;
 }
@@ -136,18 +126,25 @@ HMI_ENGINE_RESULT HMI_DemoVariableBox_RefreshScreen(SGUI_SCR_DEV* pstDeviceIF, c
     /*----------------------------------*/
     /* Process                          */
     /*----------------------------------*/
+
     // Draw frame
     HMI_DemoVariableBox_DrawFrame(pstDeviceIF, (SGUI_SZSTR)s_szFrameTitle);
     // Draw number box
-    SGUI_Basic_DrawRectangle(pstDeviceIF, VARIABLE_BOX_POSX, VARIABLE_BOX_NUMBER_POSY,
-                            s_stNumberVariableBox.stParam.stLayout.iWidth+4, s_stNumberVariableBox.stParam.stLayout.iHeight+4,
+    SGUI_Basic_DrawRectangle(pstDeviceIF, VARIABLE_BOX_POSX, VARIABLE_BOX_NUMBER_HIGH_POSY,
+                            s_stNumberHighBox.stParam.stLayout.iWidth+4, s_stNumberHighBox.stParam.stLayout.iHeight+4,
                              SGUI_COLOR_FRGCLR, SGUI_COLOR_BKGCLR);
-    SGUI_NumberVariableBox_Repaint(pstDeviceIF, &s_stNumberVariableBox, (0 == s_uiFocusedFlag)?SGUI_DRAW_REVERSE:SGUI_DRAW_NORMAL);
+    SGUI_NumberVariableBox_Repaint(pstDeviceIF, &s_stNumberHighBox, (0 == s_HighAndLowFlag)?SGUI_DRAW_REVERSE:SGUI_DRAW_NORMAL);
+
+    SGUI_Basic_DrawRectangle(pstDeviceIF, VARIABLE_BOX_POSX, VARIABLE_BOX_NUMBER_LOW_POSY,
+                            s_stNumberHighBox.stParam.stLayout.iWidth+4, s_stNumberHighBox.stParam.stLayout.iHeight+4,
+                             SGUI_COLOR_FRGCLR, SGUI_COLOR_BKGCLR);
+    SGUI_NumberVariableBox_Repaint(pstDeviceIF, &s_stNumberLowBox, (1 == s_HighAndLowFlag)?SGUI_DRAW_REVERSE:SGUI_DRAW_NORMAL);
+
     // Draw text box
-    SGUI_Basic_DrawRectangle(pstDeviceIF, VARIABLE_BOX_POSX, VARIABLE_BOX_TEXT_POSY,
-                            s_stTextVariableBox.stParam.stLayout.iWidth+4, s_stTextVariableBox.stParam.stLayout.iHeight+4,
-                            SGUI_COLOR_FRGCLR, SGUI_COLOR_BKGCLR);
-    SGUI_TextVariableBox_Repaint(pstDeviceIF, &s_stTextVariableBox, VARIABLE_MASK_CHARACTER, (0 == s_uiFocusedFlag)?SGUI_DRAW_NORMAL:SGUI_DRAW_REVERSE);
+    // SGUI_Basic_DrawRectangle(pstDeviceIF, VARIABLE_BOX_POSX, VARIABLE_BOX_TEXT_POSY,
+    //                         s_stTextVariableBox.stParam.stLayout.iWidth+4, s_stTextVariableBox.stParam.stLayout.iHeight+4,
+    //                         SGUI_COLOR_FRGCLR, SGUI_COLOR_BKGCLR);
+    // SGUI_TextVariableBox_Repaint(pstDeviceIF, &s_stTextVariableBox, VARIABLE_MASK_CHARACTER, (0 == s_HighAndLowFlag)?SGUI_DRAW_NORMAL:SGUI_DRAW_REVERSE);
 
     return HMI_RET_NORMAL;
 }
@@ -171,143 +168,81 @@ HMI_ENGINE_RESULT HMI_DemoVariableBox_ProcessEvent(SGUI_SCR_DEV* pstDeviceIF, co
     /*----------------------------------*/
     /* Process                          */
     /*----------------------------------*/
-    if(s_uiAutoConfirmTimer > 0)
+    if(EVENT_ID_KEY_PRESS == pstEvent->iID)
     {
-        switch(pstEvent->iID)
-        {
-            case EVENT_ID_KEY_PRESS:
-            {
-                pstKeyEvent = (KEY_PRESS_EVENT*)pstEvent;
-                uiKeyValue = KEY_CODE_VALUE(pstKeyEvent->Data.uiKeyValue);
+        pstKeyEvent = (KEY_PRESS_EVENT*)pstEvent;
+        uiKeyValue = KEY_CODE_VALUE(pstKeyEvent->Data.uiKeyValue);
 
-                if(KEY_VALUE_SPACE == uiKeyValue)
-                {
-                    // Stop count down when press space.
-                    s_uiAutoConfirmTimer = 0;
-                    eProcessResult = HMI_DemoVariableBox_RefreshScreen(pstDeviceIF, NULL);
-                    RTCTimerEnable(false);
-                }
-            }
-            case EVENT_ID_RTC:
+        switch(uiKeyValue)
+        {
+            case KEY_VALUE_ENTER:
             {
-                if(s_uiAutoConfirmTimer > 0)
+                s_HighAndLowFlag = ((s_HighAndLowFlag+1)%2);
+                if(1 == s_HighAndLowFlag)
                 {
-                    //Count down five seconds
-                    s_uiAutoConfirmTimer--;
+                    SGUI_NumberVariableBox_Repaint(pstDeviceIF, &s_stNumberHighBox, SGUI_DRAW_REVERSE);
+                    SGUI_NumberVariableBox_Repaint(pstDeviceIF, &s_stNumberLowBox, SGUI_DRAW_NORMAL);
                 }
-                // Redraw screen if time out.
                 else
                 {
-                    eProcessResult = HMI_DemoVariableBox_RefreshScreen(pstDeviceIF, NULL);
-                    RTCTimerEnable(false);
+                    SGUI_NumberVariableBox_Repaint(pstDeviceIF, &s_stNumberHighBox, SGUI_DRAW_NORMAL);
+                    SGUI_NumberVariableBox_Repaint(pstDeviceIF, &s_stNumberLowBox, SGUI_DRAW_REVERSE);
                 }
+                break;
             }
-        }
-    }
-    else
-    {
-        if(EVENT_ID_KEY_PRESS == pstEvent->iID)
-        {
-            pstKeyEvent = (KEY_PRESS_EVENT*)pstEvent;
-            uiKeyValue = KEY_CODE_VALUE(pstKeyEvent->Data.uiKeyValue);
-
-            switch(uiKeyValue)
+            case KEY_VALUE_ESC:
             {
-                case KEY_VALUE_TAB:
+                iProcessAction = HMI_DEMO_PROC_CANCEL;
+                break;
+            }
+            case KEY_VALUE_UP:
+            {
+                if(1 == s_HighAndLowFlag)
                 {
-                    s_uiFocusedFlag = ((s_uiFocusedFlag+1)%2);
-                    if(0 == s_uiFocusedFlag)
-                    {
-                        SGUI_NumberVariableBox_Repaint(pstDeviceIF, &s_stNumberVariableBox, SGUI_DRAW_REVERSE);
-                        SGUI_TextVariableBox_Repaint(pstDeviceIF, &s_stTextVariableBox, VARIABLE_MASK_CHARACTER, SGUI_DRAW_NORMAL);
-                    }
-                    else
-                    {
-                        SGUI_NumberVariableBox_Repaint(pstDeviceIF, &s_stNumberVariableBox, SGUI_DRAW_NORMAL);
-                        SGUI_TextVariableBox_Repaint(pstDeviceIF, &s_stTextVariableBox, VARIABLE_MASK_CHARACTER, SGUI_DRAW_REVERSE);
-                    }
-                    break;
+                    SGUI_NumberVariableBox_SetValue(&s_stNumberHighBox, SGUI_NumberVariableBox_GetValue(&s_stNumberHighBox)+1);
+                    SGUI_NumberVariableBox_Repaint(pstDeviceIF, &s_stNumberHighBox, SGUI_DRAW_REVERSE);
+                    SGUI_NumberVariableBox_SetValue(&s_stNumberLowBox, SGUI_NumberVariableBox_GetValue(&s_stNumberLowBox));
+                    SGUI_NumberVariableBox_Repaint(pstDeviceIF, &s_stNumberLowBox, SGUI_DRAW_NORMAL);
                 }
-                case KEY_VALUE_ESC:
+                else if(0 == s_HighAndLowFlag)
                 {
-                    iProcessAction = HMI_DEMO_PROC_CANCEL;
-                    break;
+                    SGUI_NumberVariableBox_SetValue(&s_stNumberHighBox, SGUI_NumberVariableBox_GetValue(&s_stNumberHighBox));
+                    SGUI_NumberVariableBox_Repaint(pstDeviceIF, &s_stNumberHighBox, SGUI_DRAW_NORMAL);
+                    SGUI_NumberVariableBox_SetValue(&s_stNumberLowBox, SGUI_NumberVariableBox_GetValue(&s_stNumberLowBox)+1);
+                    SGUI_NumberVariableBox_Repaint(pstDeviceIF, &s_stNumberLowBox, SGUI_DRAW_REVERSE);
                 }
-                case KEY_VALUE_LEFT:
+                else
                 {
-                    if(1 == s_uiFocusedFlag)
-                    {
-                        SGUI_TextVariableBox_DecreaseIndex(&s_stTextVariableBox);
-                        SGUI_TextVariableBox_Repaint(pstDeviceIF, &s_stTextVariableBox, VARIABLE_MASK_CHARACTER, SGUI_DRAW_REVERSE);
-                    }
-                    break;
+                    /* Do nothing */
                 }
-                case KEY_VALUE_UP:
+                break;
+            }
+            case KEY_VALUE_DOWN:
+            {
+                if(1 == s_HighAndLowFlag)
                 {
-                    if(1 == s_uiFocusedFlag)
-                    {
-                        SGUI_TextVariableBox_IncreaseChar(&s_stTextVariableBox);
-                        SGUI_TextVariableBox_Repaint(pstDeviceIF, &s_stTextVariableBox, VARIABLE_MASK_CHARACTER, SGUI_DRAW_REVERSE);
-                    }
-                    else
-                    {
-                        SGUI_NumberVariableBox_SetValue(&s_stNumberVariableBox, SGUI_NumberVariableBox_GetValue(&s_stNumberVariableBox)+1);
-                        SGUI_NumberVariableBox_Repaint(pstDeviceIF, &s_stNumberVariableBox, SGUI_DRAW_REVERSE);
-                    }
-                    break;
+                    SGUI_NumberVariableBox_SetValue(&s_stNumberHighBox, SGUI_NumberVariableBox_GetValue(&s_stNumberHighBox)-1);
+                    SGUI_NumberVariableBox_Repaint(pstDeviceIF, &s_stNumberHighBox, SGUI_DRAW_REVERSE);
+                    SGUI_NumberVariableBox_SetValue(&s_stNumberLowBox, SGUI_NumberVariableBox_GetValue(&s_stNumberLowBox));
+                    SGUI_NumberVariableBox_Repaint(pstDeviceIF, &s_stNumberLowBox, SGUI_DRAW_NORMAL);
                 }
-                case KEY_VALUE_RIGHT:
+                else if(0 == s_HighAndLowFlag)
                 {
-                    if(1 == s_uiFocusedFlag)
-                    {
-                        SGUI_TextVariableBox_IncreaseIndex(&s_stTextVariableBox);
-                        SGUI_TextVariableBox_Repaint(pstDeviceIF, &s_stTextVariableBox, VARIABLE_MASK_CHARACTER, SGUI_DRAW_REVERSE);
-                    }
-                    break;
+                    SGUI_NumberVariableBox_SetValue(&s_stNumberHighBox, SGUI_NumberVariableBox_GetValue(&s_stNumberHighBox));
+                    SGUI_NumberVariableBox_Repaint(pstDeviceIF, &s_stNumberHighBox, SGUI_DRAW_NORMAL);
+                    SGUI_NumberVariableBox_SetValue(&s_stNumberLowBox, SGUI_NumberVariableBox_GetValue(&s_stNumberLowBox)-1);
+                    SGUI_NumberVariableBox_Repaint(pstDeviceIF, &s_stNumberLowBox, SGUI_DRAW_REVERSE);
                 }
-                case KEY_VALUE_DOWN:
+                else
                 {
-                    if(1 == s_uiFocusedFlag)
-                    {
-                        SGUI_TextVariableBox_DecreaseChar(&s_stTextVariableBox);
-                        SGUI_TextVariableBox_Repaint(pstDeviceIF, &s_stTextVariableBox, VARIABLE_MASK_CHARACTER, SGUI_DRAW_REVERSE);
-                    }
-                    else
-                    {
-                        SGUI_NumberVariableBox_SetValue(&s_stNumberVariableBox, SGUI_NumberVariableBox_GetValue(&s_stNumberVariableBox)-1);
-                        SGUI_NumberVariableBox_Repaint(pstDeviceIF, &s_stNumberVariableBox, SGUI_DRAW_REVERSE);
-                    }
-                    break;
+                    /* Do nothing */
                 }
-                case KEY_VALUE_ENTER:
-                {
-                    if(1 == s_uiFocusedFlag)
-                    {
-                        s_szFrameTitle = SGUI_TextVariableBox_GetText(&s_stTextVariableBox);
-                        HMI_DemoVariableBox_DrawFrame(pstDeviceIF, (SGUI_SZSTR)s_szFrameTitle);
-                        // Draw number box
-                        SGUI_Basic_DrawRectangle(pstDeviceIF, VARIABLE_BOX_POSX, VARIABLE_BOX_NUMBER_POSY, s_stNumberVariableBox.stParam.stLayout.iWidth+4,
-                                                 s_stNumberVariableBox.stParam.stLayout.iHeight+4, SGUI_COLOR_FRGCLR, SGUI_COLOR_BKGCLR);
-                        SGUI_NumberVariableBox_Repaint(pstDeviceIF, &s_stNumberVariableBox, SGUI_DRAW_NORMAL);
-						// Draw text box
-                        SGUI_Basic_DrawRectangle(pstDeviceIF, VARIABLE_BOX_POSX, VARIABLE_BOX_TEXT_POSY, s_stTextVariableBox.stParam.stLayout.iWidth+4,
-                                                 s_stTextVariableBox.stParam.stLayout.iHeight+4, SGUI_COLOR_FRGCLR, SGUI_COLOR_BKGCLR);
-                        SGUI_TextVariableBox_Repaint(pstDeviceIF, &s_stTextVariableBox, VARIABLE_MASK_CHARACTER, SGUI_DRAW_REVERSE);
-                    }
-                    break;
-                }
-                case KEY_VALUE_SPACE:
-                {
-                    s_uiAutoConfirmTimer = 0;
-                    RTCTimerEnable(false);
-                    eProcessResult = HMI_DemoVariableBox_RefreshScreen(pstDeviceIF, NULL);
-                    break;
-                }
-                default:
-                {
-                    /* No process. */
-                    break;
-                }
+                break;
+            }
+            default:
+            {
+                /* No process. */
+                break;
             }
         }
     }
@@ -326,7 +261,6 @@ HMI_ENGINE_RESULT HMI_DemoVariableBox_PostProcess(SGUI_SCR_DEV* pstDeviceIF, HMI
     {
         if(HMI_DEMO_PROC_CANCEL == iActionID)
         {
-            s_uiAutoConfirmTimer = 5;
             HMI_GoBack(NULL);
         }
     }
@@ -340,6 +274,8 @@ void HMI_DemoVariableBox_DrawFrame(SGUI_SCR_DEV* pstDeviceIF, SGUI_SZSTR szTitle
     /* Variable Declaration             */
     /*----------------------------------*/
     SGUI_RECT               stTextDisplayArea;
+    SGUI_RECT               stTextHighDisplayArea;
+    SGUI_RECT               stTextLowDisplayArea;
     SGUI_POINT              stInnerPos;
 
     /*----------------------------------*/
@@ -348,7 +284,16 @@ void HMI_DemoVariableBox_DrawFrame(SGUI_SCR_DEV* pstDeviceIF, SGUI_SZSTR szTitle
     stTextDisplayArea.iX = 4;
     stTextDisplayArea.iY = 4;
     stTextDisplayArea.iHeight = 12;
-    stInnerPos.iX = 0;
+
+    stTextHighDisplayArea.iX = 4;
+    stTextHighDisplayArea.iY = VARIABLE_BOX_NUMBER_HIGH_POSY;
+    stTextHighDisplayArea.iHeight = 12;
+
+    stTextLowDisplayArea.iX = 4;
+    stTextLowDisplayArea.iY = VARIABLE_BOX_NUMBER_LOW_POSY;
+    stTextLowDisplayArea.iHeight = 12;
+
+    stInnerPos.iX = 15;
     stInnerPos.iY = 0;
 
     /*----------------------------------*/
@@ -357,9 +302,16 @@ void HMI_DemoVariableBox_DrawFrame(SGUI_SCR_DEV* pstDeviceIF, SGUI_SZSTR szTitle
     if(NULL != pstDeviceIF)
     {
         stTextDisplayArea.iWidth = pstDeviceIF->stSize.iWidth-8;
+        stTextHighDisplayArea.iWidth = 55;
+        stTextLowDisplayArea.iWidth = 55;
         SGUI_Basic_DrawRectangle(pstDeviceIF, 0, 0, SGUI_RECT_WIDTH(pstDeviceIF->stSize), SGUI_RECT_HEIGHT(pstDeviceIF->stSize), SGUI_COLOR_FRGCLR, SGUI_COLOR_BKGCLR);
         SGUI_Basic_DrawRectangle(pstDeviceIF, 2, 2, SGUI_RECT_WIDTH(pstDeviceIF->stSize)-4, SGUI_RECT_HEIGHT(pstDeviceIF->stSize)-4, SGUI_COLOR_FRGCLR, SGUI_COLOR_TRANS);
         SGUI_Basic_DrawLine(pstDeviceIF, 3, 17, 124, 17, SGUI_COLOR_FRGCLR);
-        SGUI_Text_DrawText(pstDeviceIF, szTitle, &GB2312_FZXS12, &stTextDisplayArea, &stInnerPos, SGUI_DRAW_NORMAL);
+        SGUI_Text_DrawText(pstDeviceIF, "Water Level:", &SGUI_DEFAULT_FONT_12, &stTextDisplayArea, &stInnerPos, SGUI_DRAW_NORMAL);
+
+        SGUI_Text_DrawText(pstDeviceIF, "High", &SGUI_DEFAULT_FONT_12, &stTextHighDisplayArea, &stInnerPos, SGUI_DRAW_REVERSE);
+        SGUI_Text_DrawText(pstDeviceIF, "Low ", &SGUI_DEFAULT_FONT_12, &stTextLowDisplayArea, &stInnerPos, SGUI_DRAW_REVERSE);
+        SGUI_NumberVariableBox_Repaint(pstDeviceIF, &s_stNumberHighBox, SGUI_DRAW_NORMAL);
+        SGUI_NumberVariableBox_Repaint(pstDeviceIF, &s_stNumberLowBox, SGUI_DRAW_NORMAL);
     }
 }
