@@ -16,6 +16,12 @@
 #include "SGUI_IconResource.h"
 #include <string.h>
 #include <esp_log.h>
+#ifdef CONFIG_RTE_EN
+#include "RTE.h"
+#endif
+#ifdef CONFIG_PUMP_EN
+#include "pump.h"
+#endif
 
 //=======================================================================//
 //= Macro definition.                                                   =//
@@ -131,6 +137,14 @@ HMI_ENGINE_RESULT MainScreen_ProcessEvent(SGUI_SCR_DEV* pstDeviceIF, const HMI_E
             case KEY_VALUE_ESC:
             {
                 /* Call refresh for debug use */
+                if(RTEGetgePumpStateMachine() == PUMP_RUN)
+                {
+                    RTESetgePumpStateMachine(PUMP_INIT);
+                }
+                else
+                {
+                    RTESetgePumpStateMachine(PUMP_RUN);
+                }
                 // iProcessAction = HMI_DEMO_PROC_CANCEL;
                 break;
             }

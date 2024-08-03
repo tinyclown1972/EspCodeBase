@@ -1,0 +1,10 @@
+menu "RTE Configuration"
+
+    config RTE_EN
+        bool "Enable RTE component"
+        default false
+        help
+            if to Enable RTE component.
+
+endmenu
+

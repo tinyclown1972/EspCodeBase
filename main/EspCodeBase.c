@@ -10,28 +10,15 @@
 #include "driver_ssd1306_basic.h"
 #include "AdcKey.h"
 
-#define TAG "EspCodeBase"
-
-void InitGpio()
-{
-    gpio_config_t ioConfig;
-    ioConfig.pin_bit_mask = (1ULL << 3);
-    ioConfig.mode = GPIO_MODE_INPUT_OUTPUT;
-    ioConfig.pull_up_en = 1;
-    ioConfig.intr_type = GPIO_INTR_DISABLE;
-    gpio_config(&ioConfig);
-    gpio_set_level(3, 0);
-
-#ifdef CONFIG_ADC_KEY_ENABLE
-    // 配置 GPIO 0 作为 ADC 输入
-    gpio_config_t gpio_config1 = {
-        .pin_bit_mask = 1ULL << GPIO_ADC_PIN,
-        .mode = GPIO_MODE_INPUT,
-    };
-    gpio_config(&gpio_config1);
+#ifdef CONFIG_MYGPIO_EN
+#include "mygpio.h"
 #endif
 
-}
+#ifdef CONFIG_PUMP_EN
+#include "pump.h"
+#endif
+
+#define TAG "EspCodeBase"
 
 uint8_t InitDisplay()
 {
@@ -70,7 +57,11 @@ void DisplayTask(void* param)
 
 void app_main(void)
 {
-    InitGpio();
+    GpioInit();
+    PumpInit();
+
+    RTEInit();
+
     xTaskCreate(DisplayTask,"DisplayTask",2048,NULL,1,NULL);
     xTaskCreate(AdcTask,"AdcTask",2048,NULL,2,NULL);
 
