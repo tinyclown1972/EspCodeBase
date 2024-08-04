@@ -10,7 +10,6 @@
 
 #include "DemoActions.h"
 
-#define CONFIG_ADC_KEY_ENABLE
 #ifdef CONFIG_ADC_KEY_ENABLE
 
 volatile int  gKeyCode = KEY_VALUE_NONE;

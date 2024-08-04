@@ -37,7 +37,6 @@ static HMI_ENGINE_RESULT    MainScreen_Prepare(SGUI_SCR_DEV* pstDeviceIF, const 
 static HMI_ENGINE_RESULT    MainScreen_RefreshScreen(SGUI_SCR_DEV* pstDeviceIF, const void* pstParameters);
 static HMI_ENGINE_RESULT    MainScreen_ProcessEvent(SGUI_SCR_DEV* pstDeviceIF, const HMI_EVENT_BASE* pstEvent, SGUI_INT* piActionID);
 static HMI_ENGINE_RESULT    MainScreen_PostProcess(SGUI_SCR_DEV* pstDeviceIF, HMI_ENGINE_RESULT eProcResult, SGUI_INT iActionID);
-static void                 MainScreen_UpdateWaterLevel(SGUI_SCR_DEV* pstDeviceIF);
 static void                 MainScreen_DrawStaticText(SGUI_SCR_DEV *pstDeviceIF);
 
 //=======================================================================//
@@ -88,7 +87,7 @@ HMI_ENGINE_RESULT MainScreen_Prepare(SGUI_SCR_DEV* pstDeviceIF, const void* pstP
     /* Process                          */
     /*----------------------------------*/
     MainScreen_DrawStaticText(pstDeviceIF);
-    MainScreen_UpdateWaterLevel(pstDeviceIF);
+    MainScreen_UpdateWaterLevel(pstDeviceIF, (uint8_t)0);
 
     return HMI_RET_NORMAL;
 }
@@ -136,16 +135,7 @@ HMI_ENGINE_RESULT MainScreen_ProcessEvent(SGUI_SCR_DEV* pstDeviceIF, const HMI_E
             }
             case KEY_VALUE_ESC:
             {
-                /* Call refresh for debug use */
-                if(RTEGetgePumpStateMachine() == PUMP_RUN)
-                {
-                    RTESetgePumpStateMachine(PUMP_INIT);
-                }
-                else
-                {
-                    RTESetgePumpStateMachine(PUMP_RUN);
-                }
-                // iProcessAction = HMI_DEMO_PROC_CANCEL;
+                iProcessAction = HMI_DEMO_PROC_CANCEL;
                 break;
             }
             case KEY_VALUE_UP:
@@ -155,7 +145,15 @@ HMI_ENGINE_RESULT MainScreen_ProcessEvent(SGUI_SCR_DEV* pstDeviceIF, const HMI_E
             case KEY_VALUE_DOWN:
             {
                 /* Should Add water manually */
-                MainScreen_UpdateWaterLevel(pstDeviceIF);
+                /* Call refresh for debug use */
+                if(RTEGetgePumpStateMachine() == PUMP_RUN)
+                {
+                    RTESetgePumpStateMachine(PUMP_INIT);
+                }
+                else
+                {
+                    RTESetgePumpStateMachine(PUMP_RUN);
+                }
                 break;
             }
             default:
@@ -182,12 +180,16 @@ HMI_ENGINE_RESULT MainScreen_PostProcess(SGUI_SCR_DEV* pstDeviceIF, HMI_ENGINE_R
         {
             HMI_SwitchScreen(HMI_SCREEN_ID_DEMO_VARIABLE_BOX, NULL);
         }
+        else if(iActionID == HMI_DEMO_PROC_CANCEL)
+        {
+            HMI_SwitchScreen(HMI_SCREEN_ID_DEMO_TEXT_NOTICE, "Confirm to store parameter and RESTART!");
+        }
     }
 
     return HMI_RET_NORMAL;
 }
 
-void MainScreen_UpdateWaterLevel(SGUI_SCR_DEV* pstDeviceIF)
+void MainScreen_UpdateWaterLevel(SGUI_SCR_DEV* pstDeviceIF, uint8_t u8WaterLevel)
 {
     /*----------------------------------*/
     /* Variable Declaration             */
@@ -202,7 +204,7 @@ void MainScreen_UpdateWaterLevel(SGUI_SCR_DEV* pstDeviceIF)
     /* Use full screen */
     stTextWaterDisplayArea.iX = 0;
     stTextWaterDisplayArea.iY = 32;
-    stTextWaterDisplayArea.iHeight = 31;
+    stTextWaterDisplayArea.iHeight = 32;
     stTextWaterDisplayArea.iWidth = 128;
 
     /*----------------------------------*/
@@ -210,8 +212,7 @@ void MainScreen_UpdateWaterLevel(SGUI_SCR_DEV* pstDeviceIF)
     /*----------------------------------*/
     if(NULL != pstDeviceIF)
     {
-        i4Count++;
-        sprintf(DisplayText, "%d", i4Count);
+        sprintf(DisplayText, "%d", u8WaterLevel);
 
         /* Centralize */
         stInnerPos.iX = (128 - (strlen(DisplayText) * 8)) / 2;

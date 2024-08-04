@@ -15,6 +15,7 @@
 //= Static variable declaration.                                        =//
 //=======================================================================//
 static HMI_ENGINE_OBJECT*           g_pstActivedEngineObject;
+static SGUI_INT gScreenId = -1;
 
 //=======================================================================//
 //= Static function declaration.                                        =//
@@ -24,6 +25,11 @@ static HMI_SCREEN_OBJECT* HMI_GetScreenObjectInEngine(HMI_ENGINE_OBJECT* pstHMIE
 //=======================================================================//
 //= Function define.                                                    =//
 //=======================================================================//
+SGUI_INT HMI_GetActiveScreenId(void)
+{
+    return gScreenId;
+}
+
 /*****************************************************************************/
 /** Function Name:  HMI_ActiveEngine                                        **/
 /** Purpose:        Set a HMI engine object to the activated state.         **/
@@ -85,6 +91,7 @@ HMI_ENGINE_RESULT HMI_ActiveEngine(HMI_ENGINE_OBJECT* pstHMIEngineObject, SGUI_I
     if(HMI_RET_NORMAL == eProcessResult)
     {
         g_pstActivedEngineObject = pstHMIEngineObject;
+        gScreenId = iScreenID;
     }
     return eProcessResult;
 }
@@ -257,6 +264,7 @@ HMI_ENGINE_RESULT HMI_SwitchScreen(SGUI_INT iDestScreenID, const void* pstParame
                 {
                     eProcessResult = pstDestScreen->pstActions->Prepare(g_pstActivedEngineObject->Interface, pstParameters);
                 }
+                gScreenId = iDestScreenID;
             }
         }
 
@@ -309,6 +317,7 @@ HMI_ENGINE_RESULT HMI_GoBack(const void* pstParameters)
                 {
                     eProcessResult = pstPreviousScreen->pstActions->Prepare(g_pstActivedEngineObject->Interface, pstParameters);
                 }
+                gScreenId = pstPreviousScreen->iScreenID;
             }
         }
         else

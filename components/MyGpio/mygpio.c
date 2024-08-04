@@ -38,6 +38,8 @@ tGpioConf gGpioConf[] = {
 #ifdef CONFIG_ADC_KEY_ENABLE
     {"AdcKey", GPIO_E_ADC_PIN, 0, MY_GPIO_LOW, GPIO_MODE_INPUT, GPIO_INTR_DISABLE},
 #endif
+    {"SR04Trig", GPIO_E_SR04_TRIG, 0, MY_GPIO_LOW, GPIO_MODE_OUTPUT, GPIO_INTR_DISABLE},
+    {"SR04Echo", GPIO_E_SR04_ECHO, 0, MY_GPIO_LOW, GPIO_MODE_INPUT, GPIO_INTR_DISABLE},
 };
 const int gGpioConfSize = sizeof(gGpioConf) / sizeof(gGpioConf[0]);
 
@@ -114,4 +116,5 @@ void GpioInit()
         }
     }
 };
+
 #endif

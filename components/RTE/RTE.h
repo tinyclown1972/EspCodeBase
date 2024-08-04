@@ -18,6 +18,7 @@ RTE_STAT(uint32_t, u32DebugPrintFlag, 0);
 RTE_STAT(int32_t, i32EmptyBowl, 0);
 RTE_STAT(int32_t, i32LowWaterBowl, 0);
 RTE_STAT(int32_t, i32HighWaterBowl, 0);
+RTE_STAT(uint8_t, WaterLevel, 0);
 
 extern void RTEInit(void);
 

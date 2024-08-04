@@ -10,12 +10,20 @@
 #include "driver_ssd1306_basic.h"
 #include "AdcKey.h"
 
+#ifdef CONFIG_UTILS_EN
+#include "utils.h"
+#endif
+
 #ifdef CONFIG_MYGPIO_EN
 #include "mygpio.h"
 #endif
 
 #ifdef CONFIG_PUMP_EN
 #include "pump.h"
+#endif
+
+#ifdef CONFIG_SR04_EN
+#include "SR04.h"
 #endif
 
 #define TAG "EspCodeBase"
@@ -57,10 +65,11 @@ void DisplayTask(void* param)
 
 void app_main(void)
 {
+    NvsFlashInit();
     GpioInit();
     PumpInit();
-
     RTEInit();
+    SR04Init();
 
     xTaskCreate(DisplayTask,"DisplayTask",2048,NULL,1,NULL);
     xTaskCreate(AdcTask,"AdcTask",2048,NULL,2,NULL);

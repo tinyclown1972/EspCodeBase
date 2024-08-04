@@ -4,8 +4,6 @@
 
 #ifndef ADCKEY_H
 #define ADCKEY_H
-#define CONFIG_ADC_KEY_ENABLE
-#ifdef CONFIG_ADC_KEY_ENABLE
 #include <driver/gpio.h>
 
 #define GPIO_ADC_PIN GPIO_NUM_0
@@ -20,4 +18,3 @@ typedef struct
 void AdcTask(void *pvParameter);
 
 #endif
-#endif //ADCKEY_H

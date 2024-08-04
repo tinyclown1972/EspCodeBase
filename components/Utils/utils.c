@@ -9,6 +9,8 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
+#include "nvs_flash.h"
+#include "nvs.h"
 
 #ifdef CONFIG_UTILS_EN
 uint16_t gPrintFlag[] = {0,
@@ -29,9 +31,14 @@ uint16_t gPrintFlag[] = {0,
 #endif
 };
 
-uint16_t gPrintFlahSz = sizeof(gPrintFlag) / sizeof(gPrintFlag[0]);
+#define TAG ("Utils")
+#define FALSE 0
+#define TRUE  1
 
-#ifdef CONFIG_CONSOLE_EN
+uint16_t gPrintFlahSz = sizeof(gPrintFlag) / sizeof(gPrintFlag[0]);
+static uint8_t u8NvsFlsInit = FALSE;
+
+    #ifdef CONFIG_CONSOLE_EN
 /** Arguments used by 'join' function */
 static struct
 {
@@ -110,4 +117,88 @@ int GetDigitLength(int number)
     } while (number != 0);
     return length;
 }
+
+void NvsFlashInit(void)
+{
+    esp_err_t err = nvs_flash_init();
+
+    if (err == ESP_ERR_NVS_NO_FREE_PAGES || err == ESP_ERR_NVS_NEW_VERSION_FOUND) {
+        // NVS partition was truncated and needs to be erased
+        // Retry nvs_flash_init
+        ESP_ERROR_CHECK(nvs_flash_erase());
+        err = nvs_flash_init();
+    }
+
+    if (err == ESP_OK) {
+        u8NvsFlsInit = TRUE;
+    }
+    else
+    {
+        u8NvsFlsInit = FALSE;
+        ESP_LOGE(TAG, "Nvs Flash Init Failed!");
+    }
+}
+
+esp_err_t NvsFlashReadInt32(const char *nameSpace, const char *key, int32_t *pi32Val)
+{
+    esp_err_t err;
+    nvs_handle_t my_handle;
+
+    if(u8NvsFlsInit == TRUE)
+    {
+        err = nvs_open(nameSpace, NVS_READWRITE, &my_handle);
+
+        if (err != ESP_OK) {
+            ESP_LOGE(TAG, "Error (%s) opening NVS handle!\n", esp_err_to_name(err));
+        } else {
+            // Read
+            err = nvs_get_i32(my_handle, key , pi32Val);
+            switch (err) {
+                case ESP_OK:
+                    break;
+                case ESP_ERR_NVS_NOT_FOUND:
+                    ESP_LOGE(TAG, "The Request value is not initialized yet!\n");
+                    break;
+                default :
+                    ESP_LOGE(TAG, "Error (%s) reading!\n", esp_err_to_name(err));
+            }
+        }
+    }
+    else
+    {
+        err = ESP_FAIL;
+    }
+
+    return err;
+}
+
+esp_err_t NvsFlashWriteInt32(const char *nameSpace, const char *key, int32_t *pi32Val)
+{
+    esp_err_t err;
+    nvs_handle_t my_handle;
+
+    if(u8NvsFlsInit == TRUE)
+    {
+        err = nvs_open(nameSpace, NVS_READWRITE, &my_handle);
+
+        if (err != ESP_OK) {
+            ESP_LOGE(TAG, "Error (%s) opening NVS handle!\n", esp_err_to_name(err));
+        } else {
+            // Write
+            err = nvs_set_i32(my_handle, key , *pi32Val);
+
+            if(err != ESP_OK)
+            {
+                ESP_LOGE(TAG, "Nvs Flash set value Failed! Reason: %s\n", esp_err_to_name(err));
+            }
+        }
+    }
+    else
+    {
+        err = ESP_FAIL;
+    }
+
+    return err;
+}
+
 #endif

@@ -14,6 +14,7 @@
 #include "SGUI_VariableBox.h"
 #include "SGUI_FontResource.h"
 #include "SGUI_IconResource.h"
+#include "utils.h"
 
 //=======================================================================//
 //= Macro definition.                                                   =//
@@ -39,8 +40,8 @@ static void                 HMI_DemoVariableBox_DrawFrame(SGUI_SCR_DEV* pstDevic
 //= Static variable declaration.                                        =//
 //=======================================================================//
 static SGUI_INT                 s_HighAndLowFlag;
-static SGUI_NUM_VARBOX_STRUCT   s_stNumberHighBox =     {0x00};
-static SGUI_NUM_VARBOX_STRUCT   s_stNumberLowBox  =     {0x00};
+SGUI_NUM_VARBOX_STRUCT          s_stNumberHighBox =     {0x00};
+SGUI_NUM_VARBOX_STRUCT          s_stNumberLowBox  =     {0x00};
 
 static SGUI_CHAR                s_szDefaultFrameTitle[] =   SCR4_VAR_BOX_TITLE;
 static SGUI_SZSTR               s_szFrameTitle =            s_szDefaultFrameTitle;
@@ -60,6 +61,7 @@ HMI_SCREEN_OBJECT               g_stHMIDemo_VariableBox =   {   HMI_SCREEN_ID_DE
                                                                 &s_stDemoVariableBoxActions
                                                             };
 
+
 //=======================================================================//
 //= Function define.                                                    =//
 //=======================================================================//
@@ -70,6 +72,7 @@ HMI_ENGINE_RESULT HMI_DemoVariableBox_Initialize(SGUI_SCR_DEV* pstDeviceIF)
     /*----------------------------------*/
     SGUI_NUM_VARBOX_PARAM   stHighParam;
     SGUI_NUM_VARBOX_PARAM   stLowParam;
+    int32_t i32TempVal = 0;
 
     /*----------------------------------*/
     /* Process                          */
@@ -77,8 +80,8 @@ HMI_ENGINE_RESULT HMI_DemoVariableBox_Initialize(SGUI_SCR_DEV* pstDeviceIF)
     s_HighAndLowFlag = -1;
 
     stHighParam.eAlignment = SGUI_CENTER;
-    stHighParam.iMin = -50;
-    stHighParam.iMax = 100;
+    stHighParam.iMin = 0;
+    stHighParam.iMax = 65535;
     stHighParam.pstFontRes = &SGUI_DEFAULT_FONT_12;
     stHighParam.stLayout.iX = VARIABLE_BOX_POSX+2;
     stHighParam.stLayout.iY = VARIABLE_BOX_NUMBER_HIGH_POSY;
@@ -88,8 +91,8 @@ HMI_ENGINE_RESULT HMI_DemoVariableBox_Initialize(SGUI_SCR_DEV* pstDeviceIF)
     SGUI_NumberVariableBox_Initialize(&s_stNumberHighBox, &stHighParam);
 
     stLowParam.eAlignment = SGUI_CENTER;
-    stLowParam.iMin = -50;
-    stLowParam.iMax = 100;
+    stLowParam.iMin = 0;
+    stLowParam.iMax = 65535;
     stLowParam.pstFontRes = &SGUI_DEFAULT_FONT_12;
     stLowParam.stLayout.iX = VARIABLE_BOX_POSX+2;
     stLowParam.stLayout.iY = VARIABLE_BOX_NUMBER_LOW_POSY;
@@ -97,6 +100,13 @@ HMI_ENGINE_RESULT HMI_DemoVariableBox_Initialize(SGUI_SCR_DEV* pstDeviceIF)
     stLowParam.stLayout.iHeight = SGUI_DEFAULT_FONT_12.iHeight;
 
     SGUI_NumberVariableBox_Initialize(&s_stNumberLowBox, &stLowParam);
+
+    HMI_DemoVariableBox_DrawFrame(pstDeviceIF, (SGUI_SZSTR)s_szFrameTitle);
+    NvsFlashReadInt32("nvs", "HighL", &i32TempVal);
+    SGUI_NumberVariableBox_SetValue(&s_stNumberHighBox, i32TempVal);
+    i32TempVal = 0;
+    NvsFlashReadInt32("nvs", "LowL", &i32TempVal);
+    SGUI_NumberVariableBox_SetValue(&s_stNumberLowBox, i32TempVal);
 
     return HMI_RET_NORMAL;
 }
@@ -117,6 +127,7 @@ HMI_ENGINE_RESULT HMI_DemoVariableBox_Prepare(SGUI_SCR_DEV* pstDeviceIF, const v
     // Draw frame
     s_szFrameTitle = s_szDefaultFrameTitle;
     HMI_DemoVariableBox_DrawFrame(pstDeviceIF, (SGUI_SZSTR)s_szFrameTitle);
+
     RTCTimerEnable(true);
     return HMI_RET_NORMAL;
 }
@@ -277,6 +288,7 @@ void HMI_DemoVariableBox_DrawFrame(SGUI_SCR_DEV* pstDeviceIF, SGUI_SZSTR szTitle
     SGUI_RECT               stTextHighDisplayArea;
     SGUI_RECT               stTextLowDisplayArea;
     SGUI_POINT              stInnerPos;
+    SGUI_POINT              stTextInnerPos;
 
     /*----------------------------------*/
     /* Initialize                       */
@@ -296,6 +308,9 @@ void HMI_DemoVariableBox_DrawFrame(SGUI_SCR_DEV* pstDeviceIF, SGUI_SZSTR szTitle
     stInnerPos.iX = 15;
     stInnerPos.iY = 0;
 
+    stTextInnerPos.iX = 5;
+    stTextInnerPos.iY = 0;
+
     /*----------------------------------*/
     /* Process                          */
     /*----------------------------------*/
@@ -307,11 +322,44 @@ void HMI_DemoVariableBox_DrawFrame(SGUI_SCR_DEV* pstDeviceIF, SGUI_SZSTR szTitle
         SGUI_Basic_DrawRectangle(pstDeviceIF, 0, 0, SGUI_RECT_WIDTH(pstDeviceIF->stSize), SGUI_RECT_HEIGHT(pstDeviceIF->stSize), SGUI_COLOR_FRGCLR, SGUI_COLOR_BKGCLR);
         SGUI_Basic_DrawRectangle(pstDeviceIF, 2, 2, SGUI_RECT_WIDTH(pstDeviceIF->stSize)-4, SGUI_RECT_HEIGHT(pstDeviceIF->stSize)-4, SGUI_COLOR_FRGCLR, SGUI_COLOR_TRANS);
         SGUI_Basic_DrawLine(pstDeviceIF, 3, 17, 124, 17, SGUI_COLOR_FRGCLR);
-        SGUI_Text_DrawText(pstDeviceIF, "Water Level:", &SGUI_DEFAULT_FONT_12, &stTextDisplayArea, &stInnerPos, SGUI_DRAW_NORMAL);
+        SGUI_Text_DrawText(pstDeviceIF, "Water Level:", &SGUI_DEFAULT_FONT_12, &stTextDisplayArea, &stTextInnerPos, SGUI_DRAW_NORMAL);
 
         SGUI_Text_DrawText(pstDeviceIF, "High", &SGUI_DEFAULT_FONT_12, &stTextHighDisplayArea, &stInnerPos, SGUI_DRAW_REVERSE);
         SGUI_Text_DrawText(pstDeviceIF, "Low ", &SGUI_DEFAULT_FONT_12, &stTextLowDisplayArea, &stInnerPos, SGUI_DRAW_REVERSE);
         SGUI_NumberVariableBox_Repaint(pstDeviceIF, &s_stNumberHighBox, SGUI_DRAW_NORMAL);
         SGUI_NumberVariableBox_Repaint(pstDeviceIF, &s_stNumberLowBox, SGUI_DRAW_NORMAL);
+    }
+}
+
+void VariableBox_UpdateWaterLevel(SGUI_SCR_DEV* pstDeviceIF, uint8_t u8WaterLevel)
+{
+    /*----------------------------------*/
+    /* Variable Declaration             */
+    /*----------------------------------*/
+    SGUI_RECT               stTextWaterDisplayArea;
+    SGUI_POINT              stInnerPos;
+    char                    DisplayText[6] = "";
+
+    /*----------------------------------*/
+    /* Initialize                       */
+    /*----------------------------------*/
+    /* Use full screen */
+    stTextWaterDisplayArea.iX = 90;
+    stTextWaterDisplayArea.iY = 5;
+    stTextWaterDisplayArea.iHeight = 12;
+    stTextWaterDisplayArea.iWidth = 35;
+
+    /*----------------------------------*/
+    /* Process                          */
+    /*----------------------------------*/
+    if(NULL != pstDeviceIF)
+    {
+        sprintf(DisplayText, "%d", u8WaterLevel);
+
+        /* Centralize */
+        stInnerPos.iX = 0;
+        stInnerPos.iY = 0;
+
+        SGUI_Text_DrawText(pstDeviceIF, DisplayText, &SGUI_DEFAULT_FONT_12, &stTextWaterDisplayArea, &stInnerPos, SGUI_DRAW_NORMAL);
     }
 }

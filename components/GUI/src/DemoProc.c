@@ -38,7 +38,7 @@ HMI_SCREEN_OBJECT *g_arrpstScreenObjs[] = {
     // &g_stHMIDemo_TextPaint,
     &g_stHMIDemo_VariableBox,
     // &g_stHMIDemo_Menu,
-    // &g_stHMIDemo_Notice,
+    &g_stHMIDemo_Notice,
     // &g_stHMIDemo_BasicPaint,
     // &g_stHMIDemo_Curve,
     &g_stMain_Screen,
@@ -82,6 +82,11 @@ void SSD1306Clear() { ssd1306_basic_clear(); }
 void SSD1306SyncBuffer() { ssd1306_basic_refresh_screen(); }
 
 #endif
+
+SGUI_SCR_DEV *DemoGetScrDev(void)
+{
+    return &g_stDeviceInterface;
+}
 /*****************************************************************************/
 /** Function Name:  InitializeHMIEngineObj                                  **/
 /** Purpose:        Simple GUI HMI engine and interface demo process.       **/

@@ -43,6 +43,9 @@ typedef struct
 #define GPIO_E_ADC_PIN    GPIO_NUM_0
 #endif
 
+#define GPIO_E_SR04_TRIG    1
+#define GPIO_E_SR04_ECHO    2
+
 #ifdef CONFIG_CONSOLE_EN
 void register_Gpio(void);
 #endif

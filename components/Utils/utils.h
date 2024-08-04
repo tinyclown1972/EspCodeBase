@@ -2,6 +2,8 @@
 #define UTILS_H
 
 #include <stdint.h>
+#include "nvs_flash.h"
+#include "nvs.h"
 
 #define VAR_AUTO_GEN(module, type, name, initValue)                            \
     static type name = initValue;                                              \
@@ -33,4 +35,9 @@ void DEBUG_PRINT(uint32_t flag, const char *format, ...);
 void InfinityLoop();
 int GetDigitLength(int number);
 
+void NvsFlashInit(void);
+esp_err_t NvsFlashReadInt32(const char *nameSpace, const char *key,
+                            int32_t *pi32Val);
+esp_err_t NvsFlashWriteInt32(const char *nameSpace, const char *key,
+                             int32_t *pi32Val);
 #endif // UTILS_H

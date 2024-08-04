@@ -108,6 +108,8 @@ typedef struct
 #ifdef __cplusplus
 extern "C"{
 #endif
+
+SGUI_INT HMI_GetActiveScreenId(void);
 HMI_ENGINE_RESULT   HMI_ActiveEngine(HMI_ENGINE_OBJECT* pstHMIEngineObject, SGUI_INT iScreenID);
 HMI_ENGINE_RESULT   HMI_StartEngine(const void* pstParameters);
 HMI_ENGINE_RESULT   HMI_ProcessEvent(const HMI_EVENT_BASE* pstEvent);

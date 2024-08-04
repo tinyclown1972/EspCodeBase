@@ -17,6 +17,7 @@ RTE_VAR(uint32_t, u32DebugPrintFlag, 0);
 RTE_VAR(int32_t, i32EmptyBowl, 450);
 RTE_VAR(int32_t, i32LowWaterBowl, 600);
 RTE_VAR(int32_t, i32HighWaterBowl, 850);
+RTE_VAR(uint8_t, WaterLevel, 0);
 
 void RTEInit(void)
 {

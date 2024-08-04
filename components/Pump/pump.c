@@ -30,8 +30,6 @@
 #include "HX711.h"
 #endif
 
-RTE_VAR(ePumpState, gePumpStateMachine, PUMP_INIT);
-
 #ifdef CONFIG_CONSOLE_EN
 /** Arguments used by 'join' function */
 static struct
@@ -78,6 +76,8 @@ void register_Pump(void)
     ESP_ERROR_CHECK(esp_console_cmd_register(&join_cmd));
 }
 #endif
+
+RTE_VAR(ePumpState, gePumpStateMachine, PUMP_INIT);
 
 void PumpThread(void *pvParameter)
 {

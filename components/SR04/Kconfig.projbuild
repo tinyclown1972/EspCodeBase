@@ -1,0 +1,10 @@
+menu "SR04 Configuration"
+
+    config SR04_EN
+        bool "Enable SR04 component"
+        default false
+        help
+            if to Enable SR04 component.
+
+endmenu
+

@@ -102,6 +102,10 @@ extern HMI_SCREEN_OBJECT        g_stMain_Screen;
 extern "C"
 {
 #endif /* __cplusplus */
+
+SGUI_SCR_DEV        *DemoGetScrDev(void);
+void MainScreen_UpdateWaterLevel(SGUI_SCR_DEV* pstDeviceIF, uint8_t u8WaterLevel);
+void VariableBox_UpdateWaterLevel(SGUI_SCR_DEV* pstDeviceIF, uint8_t u8WaterLevel);
 HMI_ENGINE_RESULT   InitializeHMIEngineObj(void);
 void                DemoMainProcess(void);
 
