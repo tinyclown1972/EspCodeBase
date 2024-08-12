@@ -56,7 +56,7 @@ void SR04Thread(void *pvParameter)
         // RTESetWaterLevel((uint8_t)mean);
 
         i4ScreenID = HMI_GetActiveScreenId();
-        printf("ScreenID: %d\n",i4ScreenID);
+        // printf("ScreenID: %d\n",i4ScreenID);
         if(i4ScreenID == 1011)
         {
             MainScreen_UpdateWaterLevel(DemoGetScrDev(), (uint8_t)mean);
