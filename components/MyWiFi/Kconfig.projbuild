@@ -1,0 +1,31 @@
+menu "WiFi Configuration"
+
+    config WiFi_EN
+        bool "Enable WiFi component"
+        default false
+        help
+            if to Enable WiFi component.
+
+    config WiFi_SSID
+        depends on WiFi_EN
+        string "WiFi SSID to connect"
+        default ""
+        help
+            WiFi SSID to connect
+
+    config WiFi_PWD
+        depends on WiFi_EN
+        string "WiFi Password to connect"
+        default ""
+        help
+            WiFi Password to connect
+
+    config WiFi_RETRY
+        depends on WiFi_EN
+        int "WiFi connect Retry time"
+        default 5
+        help
+            WiFi connect Retry time
+
+endmenu
+

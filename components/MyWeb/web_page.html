@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>猫猫喂水器</title>
+    <style>
+        body, html {
+            height: 100%;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+        }
+        .container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .title {
+            margin-bottom: 20px;
+        }
+        .button {
+            margin: 5px;
+            padding: 10px 20px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1 class="title">猫猫喂水器</h1>
+    <button class="button" onclick="requestApi('PumpOn')">开始添水</button>
+    <button class="button" onclick="requestApi('PumpOff')">停止添水</button>
+    <button class="button" onclick="requestApi('Reboot')">设备重启</button>
+</div>
+
+<script>
+    // 这里是一个示例函数，你需要根据实际的API URL和逻辑来实现它
+    function requestApi(api) {
+        const url = '/api?cmd=' + api;
+
+        // 使用fetch发送请求
+        fetch(url)
+            .then(response => {
+                if (response.ok) {
+                    return response.json(); // 如果响应是JSON格式
+                }
+                throw new Error('Network response was not ok.');
+            })
+            .then(data => {
+                console.log(data); // 处理返回的数据
+            })
+            .catch(error => {
+                console.error('There has been a problem with your fetch operation:', error);
+            });
+    }
+</script>
+</body>
+</html>

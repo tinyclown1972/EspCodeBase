@@ -70,7 +70,7 @@ menu "SSD1306_X Configuration"
         default 22 if IDF_TARGET_ESP32
         default  2 if IDF_TARGET_ESP32S2 || IDF_TARGET_ESP32S3
         default  2 if IDF_TARGET_ESP32H2
-        default  6 # C3 and others
+        default  5 # C3 and others
         help
             GPIO number (IOxx) to I2C SCL.
             Some GPIOs are used for other purposes (flash connections, etc.) and cannot be used to I2C.
@@ -83,7 +83,7 @@ menu "SSD1306_X Configuration"
         default 21 if IDF_TARGET_ESP32
         default  1 if IDF_TARGET_ESP32S2 || IDF_TARGET_ESP32S3
         default  1 if IDF_TARGET_ESP32H2
-        default  5 # C3 and others
+        default  4 # C3 and others
         help
             GPIO number (IOxx) to I2C SDA.
             Some GPIOs are used for other purposes (flash connections, etc.) and cannot be used to I2C.
@@ -145,7 +145,7 @@ menu "SSD1306_X Configuration"
         range -1 GPIO_RANGE_MAX
         default 15 if IDF_TARGET_ESP32
         default 38 if IDF_TARGET_ESP32S2 || IDF_TARGET_ESP32S3
-        default  4 # C3 and others
+        default  -1 # C3 and others
         help
             GPIO number (IOxx) to RESET.
             When it is -1, RESET isn't performed.

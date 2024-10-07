@@ -1,0 +1,10 @@
+menu "Web Configuration"
+
+    config WEB_EN
+        bool "Enable Web component"
+        default false
+        help
+            if to Enable Web component.
+
+endmenu
+
