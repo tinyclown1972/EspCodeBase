@@ -15,9 +15,7 @@
 #include "esp_event.h"
 #include "esp_log.h"
 #include "nvs_flash.h"
-
 #include "lwip/err.h"
-#include "lwip/sys.h"
 
 /* The examples use WiFi configuration that you can set via project configuration menu
 
@@ -154,7 +152,7 @@ void wifi_init_sta(void)
     // vEventGroupDelete(s_wifi_event_group);
 }
 
-void MyWiFiInit(void)
+void MyWiFiInit(void* param)
 {
     //Initialize NVS
     // esp_err_t ret = nvs_flash_init();
@@ -166,4 +164,5 @@ void MyWiFiInit(void)
 
     ESP_LOGI(TAG, "ESP_WIFI_MODE_STA");
     wifi_init_sta();
+    vTaskDelete(NULL);
 }

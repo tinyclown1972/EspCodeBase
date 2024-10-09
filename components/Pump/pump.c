@@ -90,6 +90,52 @@ void PumpThread(void *pvParameter)
 #ifdef CONFIG_HX711_EN
         bowlSituation = (tPumpWaterSituation)HX711CheckWeight();
 #endif
+#ifdef CONFIG_SR04_EN
+        static uint8_t u8ConfirmAddWater = 0U;
+        uint8_t u8WaterLevel = RTEGetWaterLevel();
+        int32_t i32HighVal = 0;
+        int32_t i32LowVal  = 0;
+
+        NvsFlashReadInt32("nvs", "HighL", &i32HighVal);
+        NvsFlashReadInt32("nvs", "LowL", &i32LowVal);
+        if((int32_t)u8WaterLevel >= (i32LowVal + 2))
+        {
+            bowlSituation = PUMP_WATER_BOWL_DOWN;
+        }
+        else if(((int32_t)u8WaterLevel < (i32LowVal + 2)) && ((int32_t)u8WaterLevel >= i32LowVal))
+        {
+            bowlSituation = PUMP_WATER_BOWL_EMPTY;
+        }
+        else if(((int32_t)u8WaterLevel < i32LowVal) && ((int32_t)u8WaterLevel >= i32HighVal))
+        {
+            bowlSituation = PUMP_WATER_BOWL_NORMAL;
+        }
+        else if((int32_t)u8WaterLevel < i32HighVal)
+        {
+            bowlSituation = PUMP_WATER_BOWL_FULL;
+        }
+        else
+        {
+            bowlSituation = PUMP_WATER_BOWL_CRITICAL;
+        }
+
+        if(bowlSituation == PUMP_WATER_BOWL_EMPTY)
+        {
+            if(u8ConfirmAddWater != 5) /* 5 times of add water will add water, otherwise treat as trick */
+            {
+                u8ConfirmAddWater++;
+                bowlSituation = PUMP_WATER_BOWL_NORMAL;
+            }
+            else
+            {
+                u8ConfirmAddWater = 0;
+            }
+        }
+        else
+        {
+            u8ConfirmAddWater = 0;
+        }
+#endif
 
         switch (gePumpStateMachine)
         {
@@ -156,10 +202,16 @@ void PumpThread(void *pvParameter)
             /* Restart self */
             PUMP_SHUTDOWN;
             esp_restart();
+            break;
+        case PUMP_RUN_MANUAL:
+            /* Trigger manually */
+            continuePumpWaterTime += 1;
+            PUMP_ENABLE;
+            break;
         default:
             /* Critical go to infinity loop */
             PUMP_SHUTDOWN;
-            printf("Pump in PUMP_END situation\n");
+            printf("Pump in PUMP_WATER_BOWL_CRITICAL situation\n");
 #ifdef CONFIG_HX711_EN
             while (HX711_WATER_BOWL_DOWN != HX711CheckWeight())
             {
@@ -169,15 +221,14 @@ void PumpThread(void *pvParameter)
             break;
         }
 
-        if (continuePumpWaterTime > 300)
+        if (continuePumpWaterTime > 30)
         {
-            // printf("Can not Pump water musc than 10 Seconds\n");
             PUMP_SHUTDOWN;
-            PUMP_SHUTDOWN;
-            InfinityLoop("Can not Pump water musc than 30 Seconds\n");
+            gePumpStateMachine = PUMP_INIT;
+            // InfinityLoop("Can not Pump water more than 15 Seconds\n");
         }
 
-        ESP_DELAY(100);
+        ESP_DELAY(500);
     }
 }
 

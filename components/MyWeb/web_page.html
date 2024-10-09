@@ -26,18 +26,49 @@
             padding: 10px 20px;
             cursor: pointer;
         }
+        .water-level {
+            margin-bottom: 10px;
+        }
     </style>
 </head>
 <body>
 <div class="container">
     <h1 class="title">猫猫喂水器</h1>
+    <div class="water-level">
+        <span>当前水位: </span>
+        <span id="waterLevel">-</span>
+    </div>
     <button class="button" onclick="requestApi('PumpOn')">开始添水</button>
     <button class="button" onclick="requestApi('PumpOff')">停止添水</button>
     <button class="button" onclick="requestApi('Reboot')">设备重启</button>
 </div>
 
 <script>
-    // 这里是一个示例函数，你需要根据实际的API URL和逻辑来实现它
+    document.addEventListener('DOMContentLoaded', function() {
+        // 页面加载完成后立即开始请求水位API
+        requestWaterLevel();
+
+        // 定义一个函数来处理水位API请求
+        function requestWaterLevel() {
+            setInterval(function() {
+                fetch('/api?cmd=waterLevel')
+                    .then(response => {
+                        if (response.ok) {
+                            return response.json();
+                        }
+                        throw new Error('Network response was not ok.');
+                    })
+                    .then(data => {
+                        document.getElementById('waterLevel').textContent = data.waterLevel; // 假设API返回的数据中有一个waterLevel属性
+                    })
+                    .catch(error => {
+                        console.error('There has been a problem with your fetch operation:', error);
+                    });
+            }, 1000); // 1000毫秒，即1秒
+        }
+    });
+
+    // 原有的requestApi函数，用于处理按钮点击事件
     function requestApi(api) {
         const url = '/api?cmd=' + api;
 

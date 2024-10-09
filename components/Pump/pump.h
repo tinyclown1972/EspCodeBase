@@ -2,7 +2,6 @@
 #define _PUMP_H
 
 #include "RTE.h"
-#include "driver/gpio.h"
 #include "utils.h"
 #include <stdint.h>
 
@@ -22,6 +21,7 @@ typedef enum
     PUMP_INIT,
     PUMP_WAIT,
     PUMP_RUN,
+    PUMP_RUN_MANUAL,
     PUMP_END,
     PUMP_RESTART
 } ePumpState;

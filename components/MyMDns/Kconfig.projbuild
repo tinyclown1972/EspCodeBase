@@ -1,0 +1,10 @@
+menu "mDns Configuration"
+
+    config M_DNS_EN
+        bool "Enable mDns component"
+        default false
+        help
+            if to Enable mDns component.
+
+endmenu
+

@@ -13,7 +13,6 @@
 #include "protocol_examples_common.h"
 #include <esp_http_server.h>
 #ifdef CONFIG_RTE_EN
-#include "RTE.h"
 #include "pump.h"
 #endif
 
@@ -36,13 +35,44 @@ static esp_err_t home_get_handler(httpd_req_t *req)
 }
 
 static const httpd_uri_t hello = {
-    .uri       = "/hello",
+    .uri       = "/",
     .method    = HTTP_GET,
     .handler   = home_get_handler,
-    /* Let's pass response string in user
-     * context to demonstrate it's usage */
     .user_ctx  = NULL
 };
+
+static esp_err_t api_request_handler(const char *pParam)
+{
+    esp_err_t error = ESP_OK;
+
+    if(0 == strcmp("Reboot", pParam))
+    {
+        /* Reboot */
+        ESP_LOGI(TAG, "Reboot request");
+        vTaskDelay(1000/portTICK_PERIOD_MS);
+        esp_restart();
+    }
+    else if(0 == strcmp("PumpOn", pParam))
+    {
+        /* PumpOn */
+        ESP_LOGI(TAG, "request to add water");
+        RTESetgePumpStateMachine(PUMP_RUN_MANUAL);
+    }
+    else if(0 == strcmp("PumpOff", pParam))
+    {
+        /* PumpOff */
+        ESP_LOGI(TAG, "request to stop");
+        RTESetgePumpStateMachine(PUMP_INIT);
+    }
+    else
+    {
+        /* Unknown */
+        ESP_LOGI(TAG, "Unknown api request");
+        error = ESP_FAIL;
+    }
+
+    return error;
+}
 
 /* An HTTP GET handler */
 static esp_err_t api_get_handler(httpd_req_t *req)
@@ -52,15 +82,15 @@ static esp_err_t api_get_handler(httpd_req_t *req)
 
     /* Get header value string length and allocate memory for length + 1,
      * extra byte for null termination */
-    buf_len = httpd_req_get_hdr_value_len(req, "Host") + 1;
-    if (buf_len > 1) {
-        buf = malloc(buf_len);
-        /* Copy null terminated value string into buffer */
-        if (httpd_req_get_hdr_value_str(req, "Host", buf, buf_len) == ESP_OK) {
-            ESP_LOGI(TAG, "Found header => Host: %s", buf);
-        }
-        free(buf);
-    }
+    // buf_len = httpd_req_get_hdr_value_len(req, "Host") + 1;
+    // if (buf_len > 1) {
+    //     buf = malloc(buf_len);
+    //     /* Copy null terminated value string into buffer */
+    //     if (httpd_req_get_hdr_value_str(req, "Host", buf, buf_len) == ESP_OK) {
+    //         ESP_LOGI(TAG, "Found header => Host: %s", buf);
+    //     }
+    //     free(buf);
+    // }
 
     /* Read URL query string length and allocate memory for length + 1,
      * extra byte for null termination */
@@ -71,31 +101,18 @@ static esp_err_t api_get_handler(httpd_req_t *req)
             char param[32];
             /* Get value of expected key from query string */
             if (httpd_query_key_value(buf, "cmd", param, sizeof(param)) == ESP_OK) {
-                ESP_LOGI(TAG, "Found URL cmd => %s", param);
-
-                if(0 == strcmp("Reboot", param))
+                // ESP_LOGI(TAG, "Found URL cmd => %s", param);
+                if(0 == strcmp("waterLevel", param))
                 {
-                    /* Reboot */
-                    ESP_LOGI(TAG, "Reboot request");
-                    vTaskDelay(1000/portTICK_PERIOD_MS);
-                    esp_restart();
+                    /* return uint8_t current water level via RTEGetWaterLevel() */
+                    uint8_t waterLevel = RTEGetWaterLevel();
+                    char resp[64];
+                    snprintf(resp, sizeof(resp), "{\"waterLevel\": %d}", waterLevel);
+                    httpd_resp_send(req, resp, HTTPD_RESP_USE_STRLEN);
                 }
-                else if(0 == strcmp("PumpOn", param))
+                else if(ESP_OK != api_request_handler(param))
                 {
-                    /* PumpOn */
-                    ESP_LOGI(TAG, "Reboot request");
-                    RTESetgePumpStateMachine(PUMP_RUN);
-                }
-                else if(0 == strcmp("PumpOff", param))
-                {
-                    /* PumpOff */
-                    ESP_LOGI(TAG, "Reboot request");
-                    RTESetgePumpStateMachine(PUMP_INIT);
-                }
-                else
-                {
-                    /* Unknown */
-                    ESP_LOGI(TAG, "Unknown api request");
+                    ESP_LOGE(TAG, "Request Api failed");
                 }
             }
         }

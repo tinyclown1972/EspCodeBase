@@ -9,15 +9,12 @@
 //= Include files.                                                      =//
 //=======================================================================//
 #include "DemoProc.h"
-#include "Resource.h"
-#include "SGUI_Notice.h"
 #include "SGUI_VariableBox.h"
 #include "SGUI_FontResource.h"
-#include "SGUI_IconResource.h"
 #include <string.h>
 #include <esp_log.h>
+#include <esp_system.h>
 #ifdef CONFIG_RTE_EN
-#include "RTE.h"
 #endif
 #ifdef CONFIG_PUMP_EN
 #include "pump.h"
@@ -141,18 +138,20 @@ HMI_ENGINE_RESULT MainScreen_ProcessEvent(SGUI_SCR_DEV* pstDeviceIF, const HMI_E
             case KEY_VALUE_UP:
             {
                 /* Should Add water manually, goto next to handle */
+                esp_restart();
+                break;
             }
             case KEY_VALUE_DOWN:
             {
                 /* Should Add water manually */
                 /* Call refresh for debug use */
-                if(RTEGetgePumpStateMachine() == PUMP_RUN)
+                if((RTEGetgePumpStateMachine() == PUMP_RUN) || (RTEGetgePumpStateMachine() == PUMP_RUN_MANUAL))
                 {
                     RTESetgePumpStateMachine(PUMP_INIT);
                 }
                 else
                 {
-                    RTESetgePumpStateMachine(PUMP_RUN);
+                    RTESetgePumpStateMachine(PUMP_RUN_MANUAL);
                 }
                 break;
             }

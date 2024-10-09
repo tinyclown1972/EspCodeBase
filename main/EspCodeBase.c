@@ -36,6 +36,10 @@
 #include "MyWeb.h"
 #endif
 
+#ifdef CONFIG_M_DNS_EN
+#include "MyMDNS.h"
+#endif
+
 #include "freertos/event_groups.h"
 
 #define TAG "EspCodeBase"
@@ -85,7 +89,8 @@ void app_main(void)
     NvsFlashInit();
 #endif
 #ifdef CONFIG_WiFi_EN
-    MyWiFiInit();
+    // MyWiFiInit();
+    xTaskCreate(MyWiFiInit,"InitWifiTask",4096,NULL,3,NULL);
 #endif
 #ifdef CONFIG_MYGPIO_EN
     GpioInit();
@@ -120,6 +125,10 @@ void app_main(void)
 
                 /* Init task which should run after wifi */
                 MyWebInit();
+
+#ifdef CONFIG_M_DNS_EN
+                MyMDnsInit("miao");
+#endif
             }
         }
         else

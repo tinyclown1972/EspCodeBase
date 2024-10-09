@@ -199,6 +199,12 @@ CONFIG_ESP32_C3_LED_ENABLE=y
 # end of MgGpio Configuration
 
 #
+# mDns Configuration
+#
+CONFIG_M_DNS_EN=y
+# end of mDns Configuration
+
+#
 # Web Configuration
 #
 CONFIG_WEB_EN=y
