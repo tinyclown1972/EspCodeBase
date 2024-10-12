@@ -49,8 +49,7 @@ menu "U8g2 Configuration"
         depends on U8G2_ENABLE
         prompt "I2C port that controls this bus"
         default I2C_PORT_0
-        help
-            Select I2C port that controls this bus.
+
         config I2C_PORT_0
             bool "I2C_PORT_0"
             help

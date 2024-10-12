@@ -160,6 +160,7 @@ void app_main(void)
     xTaskCreate(MyWiFiInit,"InitWifiTask",4096,NULL,3,NULL);
 #endif
 
+    ESP_LOGI(TAG, "Hello world");
     while(true)
     {
 #ifdef CONFIG_WiFi_EN

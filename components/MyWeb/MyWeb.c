@@ -12,8 +12,12 @@
 #include "esp_netif.h"
 #include "protocol_examples_common.h"
 #include <esp_http_server.h>
+#include "cJSON.h"
 #ifdef CONFIG_RTE_EN
 #include "pump.h"
+#endif
+#ifdef CONFIG_OTA_EN
+#include "s_ota.h"
 #endif
 
 /* A simple example that demonstrates how to create GET and POST
@@ -134,6 +138,125 @@ static const httpd_uri_t api = {
     .user_ctx  = "Api interface"
 };
 
+#ifdef CONFIG_OTA_EN
+char *urlDecode(const char *encoded_url)
+{
+    int len = strlen(encoded_url);
+    char *decoded_url = (char *)malloc((len + 1) * sizeof(char));
+    int j = 0;
+
+    for (int i = 0; i < len; ++i)
+    {
+        if (encoded_url[i] == '%' && i + 2 < len)
+        {
+            char hex[3] = {encoded_url[i + 1], encoded_url[i + 2], '\0'};
+            long hex_value = strtol(hex, NULL, 16);
+            decoded_url[j++] = (char)hex_value;
+            i += 2;
+        }
+        else if (encoded_url[i] == '+')
+        {
+            decoded_url[j++] = ' ';
+        }
+        else
+        {
+            decoded_url[j++] = encoded_url[i];
+        }
+    }
+
+    decoded_url[j] = '\0';
+    return decoded_url;
+}
+
+esp_err_t ota_post_handler(httpd_req_t *req)
+{
+    static char input_buffer[256];
+    static char output_buffer[256];
+    size_t recv_size = MIN(req->content_len, 255);
+    httpd_req_recv(req, input_buffer, recv_size);
+    input_buffer[recv_size] = '\0'; // 确保输入缓冲区以空字符结尾
+
+    printf("ota input : %s\r\n", input_buffer);
+
+    httpd_resp_set_type(req, "text/html");
+    strcpy(output_buffer, ""); // 返回空响应
+    httpd_resp_send(req, output_buffer, strlen(output_buffer));
+
+    char *input = urlDecode(input_buffer);
+
+    OTA_main(input);
+    return ESP_OK;
+}
+
+httpd_uri_t ota_post_uri = {
+    .uri = "/ota",
+    .method = HTTP_POST,
+    .handler = ota_post_handler,
+    .user_ctx = NULL
+};
+#endif
+
+esp_err_t waterlevel_post_handler(httpd_req_t *req)
+{
+    static char input_buffer[256];
+    static char output_buffer[256];
+    size_t recv_size = MIN(req->content_len, 255);
+    httpd_req_recv(req, input_buffer, recv_size);
+    input_buffer[recv_size] = '\0'; // 确保输入缓冲区以空字符结尾
+
+    // 使用cJSON解析JSON数据
+    cJSON *json = cJSON_Parse(input_buffer);
+    if (json == NULL) {
+        ESP_LOGE(TAG, "Error before: [%s]\r\n", cJSON_GetErrorPtr());
+        httpd_resp_send_500(req);
+        return ESP_FAIL;
+    }
+
+    // 提取High和Low的值
+    int high_value = 0;
+    int low_value = 0;
+    if (cJSON_HasObjectItem(json, "High")) {
+        cJSON *high_item = cJSON_GetObjectItem(json, "High");
+        if (high_item->type == cJSON_Number) {
+            high_value = high_item->valueint;
+        }
+    }
+    if (cJSON_HasObjectItem(json, "Low")) {
+        cJSON *low_item = cJSON_GetObjectItem(json, "Low");
+        if (low_item->type == cJSON_Number) {
+            low_value = low_item->valueint;
+        }
+    }
+
+    if((high_value <= 0) || (low_value <= 0))
+    {
+        ESP_LOGE(TAG, "Invalid Low or High water Level");
+        strcpy(output_buffer, "Invalid Low or High water Level");
+    }
+    else
+    {
+        NvsFlashWriteInt32("nvs", "HighL", &high_value);
+        NvsFlashWriteInt32("nvs", "LowL", &low_value);
+        ESP_LOGI(TAG, "Set High and Low water Level to %d %d", high_value, low_value);
+        strcpy(output_buffer, "Ok");
+    }
+
+    // 清理cJSON对象
+    cJSON_Delete(json);
+
+    httpd_resp_set_type(req, "text/html");
+    httpd_resp_send(req, output_buffer, strlen(output_buffer));
+
+    return ESP_OK;
+}
+
+httpd_uri_t waterlevel_post_uri = {
+    .uri = "/waterlevel",
+    .method = HTTP_POST,
+    .handler = waterlevel_post_handler,
+    .user_ctx = NULL
+};
+
 /* This handler allows the custom error handling functionality to be
  * tested from client side. For that, when a PUT request 0 is sent to
  * URI /ctrl, the /hello and /echo URIs are unregistered and following
@@ -156,6 +279,13 @@ esp_err_t http_404_error_handler(httpd_req_t *req, httpd_err_code_t err)
         /* Return ESP_FAIL to close underlying socket */
         return ESP_FAIL;
     }
+#ifdef CONFIG_OTA_EN
+    else if (strcmp("/ota", req->uri) == 0) {
+        httpd_resp_send_err(req, HTTPD_404_NOT_FOUND, "/ota URI is not available");
+        /* Return ESP_FAIL to close underlying socket */
+        return ESP_FAIL;
+    }
+#endif
     /* For any other URI send 404 and close socket */
     httpd_resp_send_err(req, HTTPD_404_NOT_FOUND, "Some 404 error message");
     return ESP_FAIL;
@@ -174,6 +304,10 @@ static httpd_handle_t start_webserver(void)
         ESP_LOGI(TAG, "Registering URI handlers");
         httpd_register_uri_handler(server, &hello);
         httpd_register_uri_handler(server, &api);
+        httpd_register_uri_handler(server, &waterlevel_post_uri);
+#ifdef CONFIG_OTA_EN
+        httpd_register_uri_handler(server, &ota_post_uri);
+#endif
         return server;
     }
 

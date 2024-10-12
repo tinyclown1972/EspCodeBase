@@ -6,5 +6,6 @@ cmake_minimum_required(VERSION 3.5)
 
 include($ENV{IDF_PATH}/tools/cmake/project.cmake)
 set(EXTRA_COMPONENT_DIRS $ENV{IDF_PATH}/examples/common_components/protocol_examples_common)
-add_definitions(-D_SIMPLE_GUI_DEMO_INNER_CHS_)
+idf_build_set_property(COMPILE_OPTIONS "-O3" APPEND)
+#add_definitions(-D_SIMPLE_GUI_DEMO_INNER_CHS_)
 project(EspCodeBase)

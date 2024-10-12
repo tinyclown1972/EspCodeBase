@@ -8,26 +8,87 @@
         body, html {
             height: 100%;
             margin: 0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            text-align: center;
-        }
-        .container {
+            font-family: 'Arial', sans-serif;
+            background: #f7f7f7;
             display: flex;
             flex-direction: column;
+            justify-content: center;
             align-items: center;
+            padding: 10px;
+        }
+        .container {
+            background: white;
+            padding: 10px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 500px;
+            text-align: center;
         }
         .title {
             margin-bottom: 20px;
+            color: #333;
         }
         .button {
             margin: 5px;
-            padding: 10px 20px;
+            padding: 10px 15px;
             cursor: pointer;
+            border: none;
+            border-radius: 4px;
+            background: #5c67f2;
+            color: white;
+            width: calc(40% - 10px);
+            font-size: 16px;
+            transition: background 0.3s ease;
+        }
+        .button:hover {
+            background: #4a54e1;
+        }
+        .button-orange {
+            margin: 5px;
+            padding: 10px 15px;
+            cursor: pointer;
+            border: none;
+            border-radius: 4px;
+            background: #ffa726;
+            color: white;
+            width: calc(40% - 10px);
+            font-size: 16px;
+            transition: background 0.3s ease;
+        }
+        .button-orange:hover {
+            background: #ff9800;
         }
         .water-level {
             margin-bottom: 10px;
+            color: #333;
+        }
+        .input-group {
+            margin-bottom: 10px;
+            display: flex;
+            flex-direction: row;
+            justify-content: center;
+            align-items: center;
+        }
+        input[type="number"] {
+            margin: 5px;
+            padding: 10px 20px;
+            width: calc(40% - 10px);
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+        input[type="number"]:focus {
+            outline: none;
+            border-color: #5c67f2;
+        }
+        @media (max-width: 600px) {
+            .container {
+                width: 90%;
+            }
+            input[type="number"] {
+                width: calc(40% - 10px);
+            }
         }
     </style>
 </head>
@@ -38,9 +99,17 @@
         <span>当前水位: </span>
         <span id="waterLevel">-</span>
     </div>
-    <button class="button" onclick="requestApi('PumpOn')">开始添水</button>
-    <button class="button" onclick="requestApi('PumpOff')">停止添水</button>
-    <button class="button" onclick="requestApi('Reboot')">设备重启</button>
+    <button class="button" style="margin-top: 20px" onclick="requestApi('PumpOn')">开始添水</button>
+    <button class="button" style="margin-top: 20px" onclick="requestApi('PumpOff')">停止添水</button>
+
+    <div class="input-group" style="margin-top: 20px">
+        <input type="number" id="HighNumber" placeholder="High">
+        <input type="number" id="LowNumber" placeholder="Low">
+        <button class="button" style="width: calc(30% - 10px)" onclick="sendNumbersToApi()">确认</button>
+    </div>
+
+    <button class="button-orange" style="margin-top: 20px" onclick="sendPostRequest()">OTA</button>
+    <button class="button-orange" style="margin-top: 20px" onclick="requestApi('Reboot')">设备重启</button>
 </div>
 
 <script>
@@ -68,9 +137,88 @@
         }
     });
 
-    // 原有的requestApi函数，用于处理按钮点击事件
+    function validateAddress(address) {
+        var pattern = /^http:\/\/.*\.bin$/i;
+        return pattern.test(address);
+    }
+
+    function sendPostRequest() {
+        var confirmed = confirm("您确定要进行OTA操作吗?");
+        if (confirmed) {
+            prompt("请使用python创建一个http的server服务器,并在其中放置待升级的固件,升级完成后会自动重启,失败则不会");
+            var address = prompt("请输入完整地址: 如http://192.168.1.1:8070/OTA.bin");
+            if (address !== null && address.trim() !== "") {
+                if (validateAddress(address)) {
+                    var xhr = new XMLHttpRequest();
+                    var url = "ota";  // 替换为您的OTA API URL
+                    xhr.open("POST", url, true);
+                    xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+
+                    xhr.onreadystatechange = function () {
+                        if (xhr.readyState === 4 && xhr.status === 200) {
+                            var response = xhr.responseText;
+                            console.log("OTA response:", response);
+                            // 在这里处理OTA响应
+                        }
+                    };
+                }
+                else {
+                    alert("地址输入有误,地址必须以http开始,bin结束");
+                }
+                xhr.send(encodeURIComponent(address));
+            } else {
+                alert("地址不能为空，请重新输入!");
+            }
+        }
+    }
+
+    function sendNumbersToApi() {
+        var num1 = document.getElementById('HighNumber').value;
+        var num2 = document.getElementById('LowNumber').value;
+        var data = {
+            High: parseFloat(num1),
+            Low: parseFloat(num2)
+        };
+        console.log('Sending numbers to API:', data);
+        // 实现发送请求到后端的逻辑，这里使用fetch API作为示例
+        fetch('/waterlevel', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(data),
+        })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.text(); // 获取原始文本
+            })
+            .then(data => {
+                if (data === "Ok") {
+                    alert('设置成功, 重启以生效!');
+                }
+                else
+                {
+                    alert('非法输入，请检查输入值!');
+                }
+            })
+            .catch((error) => {
+                console.error('Error:', error);
+            });
+    }
+
     function requestApi(api) {
         const url = '/api?cmd=' + api;
+
+        if(api === "Reboot")
+        {
+            var confirmed = confirm("确定要进行重启吗?");
+            if(!confirmed)
+            {
+                return;
+            }
+        }
 
         // 使用fetch发送请求
         fetch(url)

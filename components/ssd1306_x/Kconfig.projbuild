@@ -156,8 +156,7 @@ menu "SSD1306_X Configuration"
         depends on I2C_INTERFACE
         prompt "I2C port that controls this bus"
         default I2C_PORT_0
-        help
-            Select I2C port that controls this bus.
+
         config I2C_PORT_0
             bool "I2C_PORT_0"
             help
@@ -173,8 +172,7 @@ menu "SSD1306_X Configuration"
         depends on SPI_INTERFACE
         prompt "SPI peripheral that controls this bus"
         default SPI2_HOST
-        help
-            Select SPI peripheral that controls this bus.
+
         config SPI2_HOST
             bool "SPI2_HOST"
             help

@@ -1,0 +1,10 @@
+menu "OTA Configuration"
+
+    config OTA_EN
+        bool "Enable OTA component"
+        default false
+        help
+            if to Enable OTA component.
+
+endmenu
+

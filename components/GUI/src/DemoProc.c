@@ -291,8 +291,9 @@ void DemoMainProcess(void *param)
     /* Initialize                       */
     /*----------------------------------*/
     // Initialize HMI Engine.
+#ifdef CONFIG_U8G2_ENABLE
     pu8g2 = (u8g2_t*)param;
-
+#endif
     InitializeHMIEngineObj();
 
     /*----------------------------------*/
