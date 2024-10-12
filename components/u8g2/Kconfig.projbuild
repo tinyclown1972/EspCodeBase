@@ -1,0 +1,65 @@
+menu "U8g2 Configuration"
+
+    config U8G2_ENABLE
+        bool "Enable U8g2 component"
+        default false
+        help
+            if to Enable U8g2 component.
+
+    config U8G2_SCL_GPIO
+        depends on U8G2_ENABLE
+        int "SCL GPIO number"
+        range 0 GPIO_RANGE_MAX
+        default 22 if IDF_TARGET_ESP32
+        default  2 if IDF_TARGET_ESP32S2 || IDF_TARGET_ESP32S3
+        default  2 if IDF_TARGET_ESP32H2
+        default  5 # C3 and others
+        help
+            GPIO number (IOxx) to I2C SCL.
+            Some GPIOs are used for other purposes (flash connections, etc.) and cannot be used to I2C.
+            GPIOs 35-39 are input-only so cannot be used as outputs.
+
+    config U8G2_SDA_GPIO
+        depends on U8G2_ENABLE
+        int "SDA GPIO number"
+        range 0 GPIO_RANGE_MAX
+        default 21 if IDF_TARGET_ESP32
+        default  1 if IDF_TARGET_ESP32S2 || IDF_TARGET_ESP32S3
+        default  1 if IDF_TARGET_ESP32H2
+        default  4 # C3 and others
+        help
+            GPIO number (IOxx) to I2C SDA.
+            Some GPIOs are used for other purposes (flash connections, etc.) and cannot be used to I2C.
+            GPIOs 35-39 are input-only so cannot be used as outputs.
+
+    config U8G2_RESET_GPIO
+        depends on U8G2_ENABLE
+        int "RESET GPIO number"
+        range -1 GPIO_RANGE_MAX
+        default 15 if IDF_TARGET_ESP32
+        default 38 if IDF_TARGET_ESP32S2 || IDF_TARGET_ESP32S3
+        default  -1 # C3 and others
+        help
+            GPIO number (IOxx) to RESET.
+            When it is -1, RESET isn't performed.
+            Some GPIOs are used for other purposes (flash connections, etc.) and cannot be used to RESET.
+            GPIOs 35-39 are input-only so cannot be used as outputs.
+
+    choice U8G2_I2C_PORT
+        depends on U8G2_ENABLE
+        prompt "I2C port that controls this bus"
+        default I2C_PORT_0
+        help
+            Select I2C port that controls this bus.
+        config I2C_PORT_0
+            bool "I2C_PORT_0"
+            help
+                Use I2C_PORT_0.
+        config I2C_PORT_1
+            depends on IDF_TARGET_ARCH_XTENSA
+            bool "I2C_PORT_1"
+            help
+                Use I2C_PORT_1.
+    endchoice
+endmenu
+

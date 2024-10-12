@@ -14,8 +14,9 @@
 #include "SDKInterface.h"
 #endif
 
+#ifdef CONFIG_SGUI_GET_POINT_FUNC_EN
 #define SGUI_GET_POINT_FUNC_EN
-
+#endif
 //=======================================================================//
 //= Data type definition.                                               =//
 //=======================================================================//
@@ -107,7 +108,7 @@ SGUI_SCR_DEV        *DemoGetScrDev(void);
 void MainScreen_UpdateWaterLevel(SGUI_SCR_DEV* pstDeviceIF, uint8_t u8WaterLevel);
 void VariableBox_UpdateWaterLevel(SGUI_SCR_DEV* pstDeviceIF, uint8_t u8WaterLevel);
 HMI_ENGINE_RESULT   InitializeHMIEngineObj(void);
-void                DemoMainProcess(void);
+void                DemoMainProcess(void *param);
 
 bool                SysTickTimerTriggered(void);
 bool                RTCTimerTriggered(void);

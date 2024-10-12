@@ -13,7 +13,14 @@
 #include <freertos/task.h>
 
 #include "SGUI_Basic.h"
+#include "../../u8g2/csrc/u8g2_hal.h"
+#ifdef CONFIG_SSD1306_X_ENABLE
 #include "driver_ssd1306_basic.h"
+#endif
+#ifdef CONFIG_U8G2_ENABLE
+#include "u8g2_hal.h"
+#include "u8g2.h"
+#endif
 #ifdef _SIMPLE_GUI_IN_VIRTUAL_SDK_
     #include "SDKInterface.h"
     #include "SGUI_FontResource.h"
@@ -83,6 +90,47 @@ void SSD1306SyncBuffer() { ssd1306_basic_refresh_screen(); }
 
 #endif
 
+#ifdef CONFIG_U8G2_ENABLE
+static u8g2_t *pu8g2 = NULL;
+
+void SSD1306SetPixel(SGUI_INT iX, SGUI_INT iY, SGUI_UINT iColor)
+{
+    if(pu8g2 != NULL)
+    {
+        if(iColor)
+        {
+            iColor = 1;
+        }
+        u8g2_SetDrawColor(pu8g2, iColor);  /* u8g: u8g_SetColorIndex(u8g_t *u8g, uint8_t idx); */
+        u8g2_DrawPixel(pu8g2, iX, iY);
+    }
+}
+
+void SSD1306FillRect(SGUI_INT iX, SGUI_INT iY, SGUI_INT iWidth,
+                     SGUI_INT iHeight, SGUI_UINT iColor)
+{
+    if(pu8g2 != NULL)
+    {
+        u8g2_DrawBox(pu8g2, iX, iY, iWidth, iHeight);
+    }
+}
+
+void SSD1306Clear()
+{
+    if(pu8g2 != NULL)
+    {
+        u8g2_ClearBuffer(pu8g2);
+    }
+}
+void SSD1306SyncBuffer()
+{
+    if(pu8g2 != NULL)
+    {
+        u8g2_SendBuffer(pu8g2);
+    }
+}
+#endif
+
 SGUI_SCR_DEV *DemoGetScrDev(void)
 {
     return &g_stDeviceInterface;
@@ -128,22 +176,23 @@ HMI_ENGINE_RESULT InitializeHMIEngineObj(void)
     g_stDeviceInterface.fnSyncBuffer = SGUI_SDK_RefreshDisplay;
 #else
     /* Initialize display size. */
-    #if CONFIG_SSD1306_X_ENABLE
-    // g_stDeviceInterface.stSize.iWidth = SSD_1306_WIDTH;
-    // g_stDeviceInterface.stSize.iHeight = SSD_1306_HEIGHT;
+#if CONFIG_SSD1306_X_ENABLE
     g_stDeviceInterface.stSize.iWidth = 128;
     g_stDeviceInterface.stSize.iHeight = 64;
-    #else
+#elif defined(CONFIG_U8G2_ENABLE)
+    g_stDeviceInterface.stSize.iWidth = 128;
+    g_stDeviceInterface.stSize.iHeight = 64;
+#else
     g_stDeviceInterface.stSize.iWidth = 0;
     g_stDeviceInterface.stSize.iHeight = 0;
-        #error "Forget to enable driver?"
-    #endif
+    #error "Forget to enable driver?"
+#endif
 
     /* Initialize interface object. */
     g_stDeviceInterface.fnSetPixel = SSD1306SetPixel;
-    #ifdef SGUI_GET_POINT_FUNC_EN
+#ifdef SGUI_GET_POINT_FUNC_EN
     g_stDeviceInterface.fnGetPixel = SSD1306GetPixel;
-    #endif // SGUI_GET_POINT_FUNC_EN
+#endif // SGUI_GET_POINT_FUNC_EN
     g_stDeviceInterface.fnFillRect = SSD1306FillRect;
     g_stDeviceInterface.fnClear = SSD1306Clear;
     g_stDeviceInterface.fnSyncBuffer = SSD1306SyncBuffer;
@@ -236,12 +285,14 @@ bool CheckEventFlag(ENV_FLAG_INDEX eIndex)
 /** Return:         Terminal code, seam as main function return code.       **/
 /** Notice:         None.                                                   **/
 /*****************************************************************************/
-void DemoMainProcess(void)
+void DemoMainProcess(void *param)
 {
     /*----------------------------------*/
     /* Initialize                       */
     /*----------------------------------*/
     // Initialize HMI Engine.
+    pu8g2 = (u8g2_t*)param;
+
     InitializeHMIEngineObj();
 
     /*----------------------------------*/

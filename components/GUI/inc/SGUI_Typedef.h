@@ -110,7 +110,9 @@ typedef enum
     SGUI_LEFT,
 }SGUI_ALIG_MODE;
 
+#ifdef CONFIG_SGUI_GET_POINT_FUNC_EN
 #define SGUI_GET_POINT_FUNC_EN
+#endif
 // Screen device operation interface type declare.
 SGUI_DEVPF_IF_DEFINE(SGUI_INT,          SGUI_FN_IF_INITIALIZE,              (void));
 SGUI_DEVPF_IF_DEFINE(void,              SGUI_FN_IF_CLEAR,                   (void));
