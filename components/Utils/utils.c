@@ -38,7 +38,7 @@ uint16_t gPrintFlag[] = {0,
 uint16_t gPrintFlahSz = sizeof(gPrintFlag) / sizeof(gPrintFlag[0]);
 static uint8_t u8NvsFlsInit = FALSE;
 
-    #ifdef CONFIG_CONSOLE_EN
+#ifdef CONFIG_CONSOLE_EN
 /** Arguments used by 'join' function */
 static struct
 {
@@ -199,6 +199,44 @@ esp_err_t NvsFlashWriteInt32(const char *nameSpace, const char *key, int32_t *pi
     }
 
     return err;
+}
+
+void SystemRestart()
+{
+    /* Do some action */
+#ifdef CONFIG_SR04_EN
+    /* If configure threshold changed during runtime
+    *  then write new configure into flash
+    */    
+    int i32Tmp = 0;
+    int i32Val = 0;
+    NvsFlashReadInt32("nvs", "HighL", &i32Tmp);
+    i32Val = RTEGetHighThreshold();
+    if(i32Val != i32Tmp)
+    {
+        if(ESP_OK == NvsFlashWriteInt32("nvs", "HighL", &i32Val))
+        {
+            ESP_LOGI(TAG, "Write HighL with %d into NVS\n", i32Val);
+        }
+    }
+
+    i32Tmp = 0;
+    NvsFlashReadInt32("nvs", "LowL", &i32Tmp);
+    i32Val = RTEGetLowThreshold();
+    if(i32Val != i32Tmp)
+    {
+        if(ESP_OK == NvsFlashWriteInt32("nvs", "LowL", &i32Val))
+        {
+            ESP_LOGI(TAG, "Write LowL with %d into NVS\n", i32Val);
+        }
+    }
+#endif    
+    
+    ESP_LOGI(TAG, "System is going to restart");
+    /* Wait command above finished */
+    vTaskDelay(500);
+    /* Restart */
+    esp_restart();
 }
 
 #endif

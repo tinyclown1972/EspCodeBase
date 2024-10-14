@@ -115,6 +115,8 @@
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         // 页面加载完成后立即开始请求水位API
+        requestWaterLevelHigh();
+        requestWaterLevelLow();
         requestWaterLevel();
 
         // 定义一个函数来处理水位API请求
@@ -135,6 +137,38 @@
                     });
             }, 1000); // 1000毫秒，即1秒
         }
+
+        function requestWaterLevelHigh() {
+            fetch('/api?cmd=waterLevelHigh')
+                .then(response => {
+                    if (response.ok) {
+                        return response.json();
+                    }
+                    throw new Error('Network response was not ok.');
+                })
+                .then(data => {
+                    document.getElementById('HighNumber').value = data.waterLevel; // 假设API返回的数据中有一个waterLevel属性
+                })
+                .catch(error => {
+                    console.error('There has been a problem with your fetch operation:', error);
+                });
+        }
+
+        function requestWaterLevelLow() {
+            fetch('/api?cmd=waterLevelLow')
+                .then(response => {
+                    if (response.ok) {
+                        return response.json();
+                    }
+                    throw new Error('Network response was not ok.');
+                })
+                .then(data => {
+                    document.getElementById('LowNumber').value = data.waterLevel; // 假设API返回的数据中有一个waterLevel属性
+                })
+                .catch(error => {
+                    console.error('There has been a problem with your fetch operation:', error);
+                });
+        }
     });
 
     function validateAddress(address) {
@@ -145,7 +179,7 @@
     function sendPostRequest() {
         var confirmed = confirm("您确定要进行OTA操作吗?");
         if (confirmed) {
-            prompt("请使用python创建一个http的server服务器,并在其中放置待升级的固件,升级完成后会自动重启,失败则不会");
+            confirm("请使用python创建一个http的server服务器,并在其中放置待升级的固件,升级完成后会自动重启,失败则不会");
             var address = prompt("请输入完整地址: 如http://192.168.1.1:8070/OTA.bin");
             if (address !== null && address.trim() !== "") {
                 if (validateAddress(address)) {
@@ -159,6 +193,7 @@
                             var response = xhr.responseText;
                             console.log("OTA response:", response);
                             // 在这里处理OTA响应
+                            alert("开始OTA,大约需要一分钟的时间,更新完成后会自动重启,请手动刷新页面");
                         }
                     };
                 }

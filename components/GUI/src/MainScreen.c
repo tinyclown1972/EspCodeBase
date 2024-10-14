@@ -84,7 +84,7 @@ HMI_ENGINE_RESULT MainScreen_Prepare(SGUI_SCR_DEV* pstDeviceIF, const void* pstP
     /* Process                          */
     /*----------------------------------*/
     MainScreen_DrawStaticText(pstDeviceIF);
-    MainScreen_UpdateWaterLevel(pstDeviceIF, (uint8_t)0);
+    MainScreen_UpdateWaterLevel(pstDeviceIF, (uint8_t)RTEGetWaterLevel());
 
     return HMI_RET_NORMAL;
 }
@@ -138,8 +138,6 @@ HMI_ENGINE_RESULT MainScreen_ProcessEvent(SGUI_SCR_DEV* pstDeviceIF, const HMI_E
             case KEY_VALUE_UP:
             {
                 /* Should Add water manually, goto next to handle */
-                esp_restart();
-                break;
             }
             case KEY_VALUE_DOWN:
             {
@@ -181,7 +179,8 @@ HMI_ENGINE_RESULT MainScreen_PostProcess(SGUI_SCR_DEV* pstDeviceIF, HMI_ENGINE_R
         }
         else if(iActionID == HMI_DEMO_PROC_CANCEL)
         {
-            HMI_SwitchScreen(HMI_SCREEN_ID_DEMO_TEXT_NOTICE, "Confirm to store parameter and RESTART!");
+            // HMI_SwitchScreen(HMI_SCREEN_ID_DEMO_TEXT_NOTICE, "Confirm to store parameter and RESTART!");
+            HMI_SwitchScreen(HMI_SCREEN_ID_DEMO_TEXT_NOTICE, NULL);
         }
     }
 

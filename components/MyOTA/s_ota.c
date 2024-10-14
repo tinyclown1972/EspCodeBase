@@ -12,6 +12,10 @@
 #include <regex.h>
 #include <stdio.h>
 
+#ifdef CONFIG_UTILS_EN
+#include "Utils.h"
+#endif
+
 #ifdef CONFIG_OTA_EN
 static char *ota_addr = "";
 static const char *TAG = "OTA";
@@ -61,7 +65,7 @@ void simple_ota_example_task(void *pvParameter)
     {
         ESP_LOGI(TAG, "Firmware upgrade succeed, restrt now");
         vTaskDelay(200);
-        esp_restart();
+        SystemRestart();
     }
     else
     {

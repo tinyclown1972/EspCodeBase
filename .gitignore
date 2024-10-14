@@ -2,3 +2,5 @@
 build/
 dependencies.lock
 sdkconfig.old
+.vscode
+*.patch

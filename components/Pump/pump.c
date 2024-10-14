@@ -96,8 +96,8 @@ void PumpThread(void *pvParameter)
         int32_t i32HighVal = 0;
         int32_t i32LowVal  = 0;
 
-        NvsFlashReadInt32("nvs", "HighL", &i32HighVal);
-        NvsFlashReadInt32("nvs", "LowL", &i32LowVal);
+        i32HighVal = RTEGetHighThreshold();
+        i32LowVal = RTEGetLowThreshold();
         if((int32_t)u8WaterLevel >= (i32LowVal + 2))
         {
             bowlSituation = PUMP_WATER_BOWL_DOWN;
@@ -201,7 +201,7 @@ void PumpThread(void *pvParameter)
         case PUMP_RESTART:
             /* Restart self */
             PUMP_SHUTDOWN;
-            esp_restart();
+            SystemRestart();
             break;
         case PUMP_RUN_MANUAL:
             /* Trigger manually */

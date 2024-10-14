@@ -197,5 +197,5 @@ void app_main(void)
     }
 
     /* Should never run into here */
-    esp_restart();
+    SystemRestart();
 }

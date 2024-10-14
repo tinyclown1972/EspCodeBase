@@ -14,7 +14,14 @@
 #include "SGUI_VariableBox.h"
 #include "SGUI_FontResource.h"
 #include "SGUI_IconResource.h"
+
+#ifdef CONFIG_UTILS_EN
 #include "utils.h"
+#endif
+
+#ifdef CONFIG_RTE_EN
+#include "RTE.h"
+#endif
 
 //=======================================================================//
 //= Macro definition.                                                   =//
@@ -102,11 +109,8 @@ HMI_ENGINE_RESULT HMI_DemoVariableBox_Initialize(SGUI_SCR_DEV* pstDeviceIF)
     SGUI_NumberVariableBox_Initialize(&s_stNumberLowBox, &stLowParam);
 
     HMI_DemoVariableBox_DrawFrame(pstDeviceIF, (SGUI_SZSTR)s_szFrameTitle);
-    NvsFlashReadInt32("nvs", "HighL", &i32TempVal);
-    SGUI_NumberVariableBox_SetValue(&s_stNumberHighBox, i32TempVal);
-    i32TempVal = 0;
-    NvsFlashReadInt32("nvs", "LowL", &i32TempVal);
-    SGUI_NumberVariableBox_SetValue(&s_stNumberLowBox, i32TempVal);
+    SGUI_NumberVariableBox_SetValue(&s_stNumberHighBox, RTEGetHighThreshold());
+    SGUI_NumberVariableBox_SetValue(&s_stNumberLowBox, RTEGetLowThreshold());
 
     return HMI_RET_NORMAL;
 }
@@ -127,6 +131,10 @@ HMI_ENGINE_RESULT HMI_DemoVariableBox_Prepare(SGUI_SCR_DEV* pstDeviceIF, const v
     // Draw frame
     s_szFrameTitle = s_szDefaultFrameTitle;
     HMI_DemoVariableBox_DrawFrame(pstDeviceIF, (SGUI_SZSTR)s_szFrameTitle);
+    VariableBox_UpdateWaterLevel(pstDeviceIF, (uint8_t)RTEGetWaterLevel());
+
+    SGUI_NumberVariableBox_SetValue(&s_stNumberHighBox, RTEGetHighThreshold());
+    SGUI_NumberVariableBox_SetValue(&s_stNumberLowBox, RTEGetLowThreshold());
 
     RTCTimerEnable(true);
     return HMI_RET_NORMAL;
@@ -210,16 +218,26 @@ HMI_ENGINE_RESULT HMI_DemoVariableBox_ProcessEvent(SGUI_SCR_DEV* pstDeviceIF, co
             {
                 if(1 == s_HighAndLowFlag)
                 {
+                    /* High Water Level refersh */
                     SGUI_NumberVariableBox_SetValue(&s_stNumberHighBox, SGUI_NumberVariableBox_GetValue(&s_stNumberHighBox)+1);
+                    RTESetHighThreshold(SGUI_NumberVariableBox_GetValue(&s_stNumberHighBox));
                     SGUI_NumberVariableBox_Repaint(pstDeviceIF, &s_stNumberHighBox, SGUI_DRAW_REVERSE);
-                    SGUI_NumberVariableBox_SetValue(&s_stNumberLowBox, SGUI_NumberVariableBox_GetValue(&s_stNumberLowBox));
+
+                    /* Low Water Level refresh */
+                    /* No need to re-set water level,since no change happend, if display incorrect uncomment this line */
+                    // SGUI_NumberVariableBox_SetValue(&s_stNumberLowBox, SGUI_NumberVariableBox_GetValue(&s_stNumberLowBox));
                     SGUI_NumberVariableBox_Repaint(pstDeviceIF, &s_stNumberLowBox, SGUI_DRAW_NORMAL);
                 }
                 else if(0 == s_HighAndLowFlag)
                 {
-                    SGUI_NumberVariableBox_SetValue(&s_stNumberHighBox, SGUI_NumberVariableBox_GetValue(&s_stNumberHighBox));
+                    /* High Water Level refersh */
+                    /* No need to re-set water level,since no change happend, if display incorrect uncomment this line */
+                    // SGUI_NumberVariableBox_SetValue(&s_stNumberHighBox, SGUI_NumberVariableBox_GetValue(&s_stNumberHighBox));
                     SGUI_NumberVariableBox_Repaint(pstDeviceIF, &s_stNumberHighBox, SGUI_DRAW_NORMAL);
+
+                    /* Low Water Level refresh */
                     SGUI_NumberVariableBox_SetValue(&s_stNumberLowBox, SGUI_NumberVariableBox_GetValue(&s_stNumberLowBox)+1);
+                    RTESetLowThreshold(SGUI_NumberVariableBox_GetValue(&s_stNumberLowBox));
                     SGUI_NumberVariableBox_Repaint(pstDeviceIF, &s_stNumberLowBox, SGUI_DRAW_REVERSE);
                 }
                 else
@@ -232,16 +250,26 @@ HMI_ENGINE_RESULT HMI_DemoVariableBox_ProcessEvent(SGUI_SCR_DEV* pstDeviceIF, co
             {
                 if(1 == s_HighAndLowFlag)
                 {
+                    /* High Water Level refersh */
                     SGUI_NumberVariableBox_SetValue(&s_stNumberHighBox, SGUI_NumberVariableBox_GetValue(&s_stNumberHighBox)-1);
+                    RTESetHighThreshold(SGUI_NumberVariableBox_GetValue(&s_stNumberHighBox));
                     SGUI_NumberVariableBox_Repaint(pstDeviceIF, &s_stNumberHighBox, SGUI_DRAW_REVERSE);
-                    SGUI_NumberVariableBox_SetValue(&s_stNumberLowBox, SGUI_NumberVariableBox_GetValue(&s_stNumberLowBox));
+
+                    /* Low Water Level refresh */
+                    /* No need to re-set water level,since no change happend, if display incorrect uncomment this line */
+                    // SGUI_NumberVariableBox_SetValue(&s_stNumberLowBox, SGUI_NumberVariableBox_GetValue(&s_stNumberLowBox));
                     SGUI_NumberVariableBox_Repaint(pstDeviceIF, &s_stNumberLowBox, SGUI_DRAW_NORMAL);
                 }
                 else if(0 == s_HighAndLowFlag)
                 {
-                    SGUI_NumberVariableBox_SetValue(&s_stNumberHighBox, SGUI_NumberVariableBox_GetValue(&s_stNumberHighBox));
+                    /* High Water Level refersh */
+                    /* No need to re-set water level,since no change happend, if display incorrect uncomment this line */
+                    // SGUI_NumberVariableBox_SetValue(&s_stNumberHighBox, SGUI_NumberVariableBox_GetValue(&s_stNumberHighBox));
                     SGUI_NumberVariableBox_Repaint(pstDeviceIF, &s_stNumberHighBox, SGUI_DRAW_NORMAL);
+
+                    /* Low Water Level refresh */
                     SGUI_NumberVariableBox_SetValue(&s_stNumberLowBox, SGUI_NumberVariableBox_GetValue(&s_stNumberLowBox)-1);
+                    RTESetLowThreshold(SGUI_NumberVariableBox_GetValue(&s_stNumberLowBox));
                     SGUI_NumberVariableBox_Repaint(pstDeviceIF, &s_stNumberLowBox, SGUI_DRAW_REVERSE);
                 }
                 else

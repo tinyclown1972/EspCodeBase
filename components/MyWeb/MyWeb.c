@@ -54,7 +54,7 @@ static esp_err_t api_request_handler(const char *pParam)
         /* Reboot */
         ESP_LOGI(TAG, "Reboot request");
         vTaskDelay(1000/portTICK_PERIOD_MS);
-        esp_restart();
+        SystemRestart();
     }
     else if(0 == strcmp("PumpOn", pParam))
     {
@@ -84,18 +84,6 @@ static esp_err_t api_get_handler(httpd_req_t *req)
     char*  buf;
     size_t buf_len;
 
-    /* Get header value string length and allocate memory for length + 1,
-     * extra byte for null termination */
-    // buf_len = httpd_req_get_hdr_value_len(req, "Host") + 1;
-    // if (buf_len > 1) {
-    //     buf = malloc(buf_len);
-    //     /* Copy null terminated value string into buffer */
-    //     if (httpd_req_get_hdr_value_str(req, "Host", buf, buf_len) == ESP_OK) {
-    //         ESP_LOGI(TAG, "Found header => Host: %s", buf);
-    //     }
-    //     free(buf);
-    // }
-
     /* Read URL query string length and allocate memory for length + 1,
      * extra byte for null termination */
     buf_len = httpd_req_get_url_query_len(req) + 1;
@@ -112,6 +100,20 @@ static esp_err_t api_get_handler(httpd_req_t *req)
                     uint8_t waterLevel = RTEGetWaterLevel();
                     char resp[64];
                     snprintf(resp, sizeof(resp), "{\"waterLevel\": %d}", waterLevel);
+                    httpd_resp_send(req, resp, HTTPD_RESP_USE_STRLEN);
+                }
+                else if(0 == strcmp("waterLevelHigh", param))
+                {
+                    /* return uint8_t current water level via RTEGetWaterLevel() */
+                    char resp[64];
+                    snprintf(resp, sizeof(resp), "{\"waterLevel\": %d}", RTEGetHighThreshold());
+                    httpd_resp_send(req, resp, HTTPD_RESP_USE_STRLEN);
+                }
+                else if(0 == strcmp("waterLevelLow", param))
+                {
+                    /* return uint8_t current water level via RTEGetWaterLevel() */
+                    char resp[64];
+                    snprintf(resp, sizeof(resp), "{\"waterLevel\": %d}", RTEGetLowThreshold());
                     httpd_resp_send(req, resp, HTTPD_RESP_USE_STRLEN);
                 }
                 else if(ESP_OK != api_request_handler(param))
@@ -235,8 +237,8 @@ esp_err_t waterlevel_post_handler(httpd_req_t *req)
     }
     else
     {
-        NvsFlashWriteInt32("nvs", "HighL", &high_value);
-        NvsFlashWriteInt32("nvs", "LowL", &low_value);
+        RTESetHighThreshold(high_value);
+        RTESetLowThreshold(low_value);        
         ESP_LOGI(TAG, "Set High and Low water Level to %d %d", high_value, low_value);
         strcpy(output_buffer, "Ok");
     }

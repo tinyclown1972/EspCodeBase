@@ -40,4 +40,5 @@ esp_err_t NvsFlashReadInt32(const char *nameSpace, const char *key,
                             int32_t *pi32Val);
 esp_err_t NvsFlashWriteInt32(const char *nameSpace, const char *key,
                              int32_t *pi32Val);
+void SystemRestart(void);
 #endif // UTILS_H

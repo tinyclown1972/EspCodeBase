@@ -19,6 +19,38 @@ RTE_VAR(int32_t, i32LowWaterBowl, 600);
 RTE_VAR(int32_t, i32HighWaterBowl, 850);
 RTE_VAR(uint8_t, WaterLevel, 0);
 
+#ifdef CONFIG_SR04_EN
+static int32_t gi32HighThreshold = 0;
+int32_t RTEGetHighThreshold()
+{
+    if(gi32HighThreshold == 0)
+    {
+        NvsFlashReadInt32("nvs", "HighL", &gi32HighThreshold);
+    }
+    return gi32HighThreshold;
+}
+
+void RTESetHighThreshold(int32_t i32Val)
+{
+    gi32HighThreshold = i32Val;
+}
+
+static int32_t gi32LowThreshold = 0;
+int32_t RTEGetLowThreshold()
+{
+    if(gi32LowThreshold == 0)
+    {
+        NvsFlashReadInt32("nvs", "LowL", &gi32LowThreshold);
+    }
+    return gi32LowThreshold;
+}
+
+void RTESetLowThreshold(int32_t i32Val)
+{
+    gi32LowThreshold = i32Val;
+}
+#endif
+
 void RTEInit(void)
 {
     /* Maybe init some variable here */
