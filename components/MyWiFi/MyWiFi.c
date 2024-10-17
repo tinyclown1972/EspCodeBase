@@ -15,7 +15,12 @@
 #include "esp_event.h"
 #include "esp_log.h"
 #include "nvs_flash.h"
+#include "../Utils/utils.h"
 #include "lwip/err.h"
+
+#ifdef CONFIG_UTILS_EN
+#include "Utils.h"
+#endif
 
 /* The examples use WiFi configuration that you can set via project configuration menu
 
@@ -73,6 +78,7 @@ static void event_handler(void* arg, esp_event_base_t event_base,
         } else {
             xEventGroupSetBits(s_wifi_event_group, WIFI_FAIL_BIT);
             xEventGroupClearBits(s_wifi_event_group, WIFI_CONNECTED_BIT);
+            SystemRestart();
         }
         ESP_LOGI(TAG,"connect to the AP fail");
     } else if (event_base == IP_EVENT && event_id == IP_EVENT_STA_GOT_IP) {

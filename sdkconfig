@@ -222,7 +222,7 @@ CONFIG_WEB_EN=y
 CONFIG_WiFi_EN=y
 CONFIG_WiFi_SSID="PDCN"
 CONFIG_WiFi_PWD="asdhu123"
-CONFIG_WiFi_RETRY=5
+CONFIG_WiFi_RETRY=99
 # end of WiFi Configuration
 
 #

@@ -181,7 +181,7 @@ esp_err_t ota_post_handler(httpd_req_t *req)
     printf("ota input : %s\r\n", input_buffer);
 
     httpd_resp_set_type(req, "text/html");
-    strcpy(output_buffer, ""); // 返回空响应
+    strcpy(output_buffer, "Ok"); // 返回空响应
     httpd_resp_send(req, output_buffer, strlen(output_buffer));
 
     char *input = urlDecode(input_buffer);

@@ -118,9 +118,38 @@
         requestWaterLevelHigh();
         requestWaterLevelLow();
         requestWaterLevel();
+        showAutoDismissAlert('欢迎!', 1000);
+
+        function showAutoDismissAlert(message, duration = 3000) {
+            // 创建一个提示元素
+            const alertElement = document.createElement('div');
+            alertElement.style.position = 'fixed';
+            alertElement.style.top = '20px';
+            alertElement.style.left = '50%';
+            alertElement.style.transform = 'translateX(-50%)';
+            alertElement.style.backgroundColor = '#f8d7da';
+            alertElement.style.color = '#721c24';
+            alertElement.style.padding = '10px';
+            alertElement.style.borderRadius = '5px';
+            alertElement.style.zIndex = '1000';
+            alertElement.style.whiteSpace = 'nowrap';
+            alertElement.textContent = message;
+
+            // 将提示元素添加到页面中
+            document.body.appendChild(alertElement);
+
+            // 设置一个定时器来移除提示元素
+            setTimeout(function() {
+                document.body.removeChild(alertElement);
+            }, duration);
+        }
 
         // 定义一个函数来处理水位API请求
         function requestWaterLevel() {
+            let isFirstTimeout = true; // 标记是否是第一次超时
+            let isFirstGet = false; // 标记是否是第一次成功
+            let firstTimeoutCount = 0;
+
             setInterval(function() {
                 fetch('/api?cmd=waterLevel')
                     .then(response => {
@@ -131,9 +160,30 @@
                     })
                     .then(data => {
                         document.getElementById('waterLevel').textContent = data.waterLevel; // 假设API返回的数据中有一个waterLevel属性
+                        if ((isFirstTimeout === false) && (isFirstGet === true)) {
+                            isFirstTimeout = true; // 重置标记
+                            isFirstGet = false;
+                            showAutoDismissAlert('设备上线,自动刷新页面', 1000);
+                            window.location.reload(); // 超时后的第一次成功获取数据时刷新页面
+                        }
                     })
                     .catch(error => {
-                        console.error('There has been a problem with your fetch operation:', error);
+                        if ((isFirstTimeout === true) && (isFirstGet === false)) { // 只有在第一次超时时弹窗
+                            if(firstTimeoutCount === 2)
+                            {
+                                console.error('There has been a problem with your fetch operation:', error);
+                                showAutoDismissAlert('请求超时，设备可能正在重启,或无法连接,请稍后再试。', 3000);
+                                isFirstTimeout = false; // 标记已弹窗，不再弹窗
+                                isFirstGet = true; //标记可以刷新
+                                firstTimeoutCount = 0;
+                            }
+                            else
+                            {
+                                firstTimeoutCount++;
+                            }
+                        } else {
+                            console.error('There has been a problem with your fetch operation:', error);
+                        }
                     });
             }, 1000); // 1000毫秒，即1秒
         }
@@ -180,13 +230,13 @@
         var confirmed = confirm("您确定要进行OTA操作吗?");
         if (confirmed) {
             confirm("请使用python创建一个http的server服务器,并在其中放置待升级的固件,升级完成后会自动重启,失败则不会");
-            var address = prompt("请输入完整地址: 如http://192.168.1.1:8070/OTA.bin");
+            var address = prompt("请输入完整地址: 如http://192.168.31.31:8070/EspCodeBase.bin");
             if (address !== null && address.trim() !== "") {
                 if (validateAddress(address)) {
                     var xhr = new XMLHttpRequest();
                     var url = "ota";  // 替换为您的OTA API URL
                     xhr.open("POST", url, true);
-                    xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+                    xhr.setRequestHeader("Content-Type", "text/plain");
 
                     xhr.onreadystatechange = function () {
                         if (xhr.readyState === 4 && xhr.status === 200) {

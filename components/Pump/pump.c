@@ -77,11 +77,15 @@ void register_Pump(void)
 }
 #endif
 
+#ifdef CONFIG_SR04_EN
+#define SR04_WATER_THRESHOLD    (4)
+#endif
+
 RTE_VAR(ePumpState, gePumpStateMachine, PUMP_INIT);
 
 void PumpThread(void *pvParameter)
 {
-    ESP_DELAY(1000);
+    ESP_DELAY(3000);
     static tPumpWaterSituation bowlSituation = PUMP_WATER_BOWL_NORMAL;
     static uint32_t continuePumpWaterTime = 0;
 
@@ -92,17 +96,18 @@ void PumpThread(void *pvParameter)
 #endif
 #ifdef CONFIG_SR04_EN
         static uint8_t u8ConfirmAddWater = 0U;
+        static uint8_t u8ConfirmShut = 0U;
         uint8_t u8WaterLevel = RTEGetWaterLevel();
         int32_t i32HighVal = 0;
         int32_t i32LowVal  = 0;
 
         i32HighVal = RTEGetHighThreshold();
         i32LowVal = RTEGetLowThreshold();
-        if((int32_t)u8WaterLevel >= (i32LowVal + 2))
+        if((int32_t)u8WaterLevel >= (i32LowVal + SR04_WATER_THRESHOLD))
         {
             bowlSituation = PUMP_WATER_BOWL_DOWN;
         }
-        else if(((int32_t)u8WaterLevel < (i32LowVal + 2)) && ((int32_t)u8WaterLevel >= i32LowVal))
+        else if(((int32_t)u8WaterLevel < (i32LowVal + SR04_WATER_THRESHOLD)) && ((int32_t)u8WaterLevel >= i32LowVal))
         {
             bowlSituation = PUMP_WATER_BOWL_EMPTY;
         }
@@ -131,9 +136,24 @@ void PumpThread(void *pvParameter)
                 u8ConfirmAddWater = 0;
             }
         }
+        else if((bowlSituation == PUMP_WATER_BOWL_DOWN) ||
+                (bowlSituation == PUMP_WATER_BOWL_FULL) ||
+                (bowlSituation == PUMP_WATER_BOWL_CRITICAL))
+        {
+            if(u8ConfirmShut != 3) /* 3 times of shut pump, otherwise treat as trick */
+            {
+                u8ConfirmShut++;
+                bowlSituation = PUMP_WATER_BOWL_CRITICAL;
+            }
+            else
+            {
+                u8ConfirmShut = 0;
+            }
+        }
         else
         {
             u8ConfirmAddWater = 0;
+            u8ConfirmShut = 0;
         }
 #endif
 
@@ -206,6 +226,11 @@ void PumpThread(void *pvParameter)
         case PUMP_RUN_MANUAL:
             /* Trigger manually */
             continuePumpWaterTime += 1;
+            if((PUMP_WATER_BOWL_CRITICAL == bowlSituation) ||
+                (PUMP_WATER_BOWL_FULL == bowlSituation))
+            {
+                gePumpStateMachine = PUMP_INIT;
+            }
             PUMP_ENABLE;
             break;
         default:
@@ -221,7 +246,7 @@ void PumpThread(void *pvParameter)
             break;
         }
 
-        if (continuePumpWaterTime > 30)
+        if (continuePumpWaterTime > 120)
         {
             PUMP_SHUTDOWN;
             gePumpStateMachine = PUMP_INIT;
