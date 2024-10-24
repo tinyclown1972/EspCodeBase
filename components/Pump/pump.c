@@ -77,8 +77,13 @@ void register_Pump(void)
 }
 #endif
 
+#define PUMP_STATE_MACHINE_PERIOD (250)
+#define PUMP_CONTINUE_PUMP_TIME   (60 * (1000/PUMP_STATE_MACHINE_PERIOD))  /* 60S */
+
 #ifdef CONFIG_SR04_EN
-#define SR04_WATER_THRESHOLD    (4)
+#define SR04_WATER_THRESHOLD    (4)  /* In Range(ow+SR04_WATER_THRESHOLD, Low) will add water */
+#define SR04_ADD_CONFIRM        (10 * (1000/PUMP_STATE_MACHINE_PERIOD))
+#define SR04_SHUTDOWN_CONFIRM   (4 * (1000/PUMP_STATE_MACHINE_PERIOD))
 #endif
 
 RTE_VAR(ePumpState, gePumpStateMachine, PUMP_INIT);
@@ -126,7 +131,7 @@ void PumpThread(void *pvParameter)
 
         if(bowlSituation == PUMP_WATER_BOWL_EMPTY)
         {
-            if(u8ConfirmAddWater != 5) /* 5 times of add water will add water, otherwise treat as trick */
+            if(u8ConfirmAddWater != SR04_ADD_CONFIRM) /* 5 times of add water will add water, otherwise treat as trick */
             {
                 u8ConfirmAddWater++;
                 bowlSituation = PUMP_WATER_BOWL_NORMAL;
@@ -140,10 +145,10 @@ void PumpThread(void *pvParameter)
                 (bowlSituation == PUMP_WATER_BOWL_FULL) ||
                 (bowlSituation == PUMP_WATER_BOWL_CRITICAL))
         {
-            if(u8ConfirmShut != 3) /* 3 times of shut pump, otherwise treat as trick */
+            if(u8ConfirmShut != SR04_SHUTDOWN_CONFIRM) /* 3 times of shut pump, otherwise treat as trick */
             {
                 u8ConfirmShut++;
-                bowlSituation = PUMP_WATER_BOWL_CRITICAL;
+                bowlSituation = PUMP_WATER_BOWL_NORMAL;
             }
             else
             {
@@ -211,7 +216,7 @@ void PumpThread(void *pvParameter)
             }
             else if (bowlSituation == PUMP_WATER_BOWL_FULL)
             {
-                gePumpStateMachine = PUMP_WAIT;
+                gePumpStateMachine = PUMP_INIT;
             }
             break;
         case PUMP_END:
@@ -246,14 +251,14 @@ void PumpThread(void *pvParameter)
             break;
         }
 
-        if (continuePumpWaterTime > 120)
+        if (continuePumpWaterTime > PUMP_CONTINUE_PUMP_TIME)
         {
             PUMP_SHUTDOWN;
             gePumpStateMachine = PUMP_INIT;
             // InfinityLoop("Can not Pump water more than 15 Seconds\n");
         }
 
-        ESP_DELAY(500);
+        ESP_DELAY(PUMP_STATE_MACHINE_PERIOD/portTICK_PERIOD_MS);
     }
 }
 

@@ -78,6 +78,7 @@ void SR04Init(void)
 void SR04Thread(void *pvParameter)
 {
     uint8_t u8Counter = 0;
+    uint8_t u8Tmp     = 0;
     uint8_t au8TempArray[10] = {0};
     int     i4ScreenID = 0;
 
@@ -85,8 +86,16 @@ void SR04Thread(void *pvParameter)
     {
         for (u8Counter = 0; u8Counter < 10; u8Counter++)
         {
-            au8TempArray[u8Counter] = (uint8_t)measure_distance();
-            vTaskDelay(100 / portTICK_PERIOD_MS); // 等待1秒再次测量
+            u8Tmp = (uint8_t)measure_distance();
+            if(u8Tmp == 0)
+            {
+                u8Counter--;
+            }
+            else
+            {
+                au8TempArray[u8Counter] = u8Tmp;
+            }
+            vTaskDelay(50 / portTICK_PERIOD_MS); // 等待500ms再次测量
         }
 
         double mean = calculate_mean(au8TempArray, 10);

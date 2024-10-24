@@ -68,6 +68,18 @@ static esp_err_t api_request_handler(const char *pParam)
         ESP_LOGI(TAG, "request to stop");
         RTESetgePumpStateMachine(PUMP_INIT);
     }
+    else if(0 == strcmp("NightTime", pParam))
+    {
+        /* PumpOff */
+        ESP_LOGI(TAG, "request to stop in night");
+        RTESetgePumpStateMachine(PUMP_END);
+    }
+    else if(0 == strcmp("DayTime", pParam))
+    {
+        /* PumpOff */
+        ESP_LOGI(TAG, "request to start in day time");
+        RTESetgePumpStateMachine(PUMP_INIT);
+    }
     else
     {
         /* Unknown */
@@ -116,17 +128,26 @@ static esp_err_t api_get_handler(httpd_req_t *req)
                     snprintf(resp, sizeof(resp), "{\"waterLevel\": %d}", RTEGetLowThreshold());
                     httpd_resp_send(req, resp, HTTPD_RESP_USE_STRLEN);
                 }
-                else if(ESP_OK != api_request_handler(param))
+                else
                 {
-                    ESP_LOGE(TAG, "Request Api failed");
+                    if(ESP_OK != api_request_handler(param))
+                    {
+                        char resp[64];
+                        snprintf(resp, sizeof(resp), "Failed to request");
+                        httpd_resp_send(req, resp, HTTPD_RESP_USE_STRLEN);
+                        ESP_LOGE(TAG, "Request Api failed");
+                    }
+                    else
+                    {
+                        char resp[64];
+                        snprintf(resp, sizeof(resp), "Succeed to request");
+                        httpd_resp_send(req, resp, HTTPD_RESP_USE_STRLEN);
+                    }
                 }
             }
         }
         free(buf);
     }
-
-    const char* resp_str = (const char*) req->user_ctx;
-    httpd_resp_send(req, resp_str, HTTPD_RESP_USE_STRLEN);
 
     return ESP_OK;
 }
