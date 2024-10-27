@@ -4,3 +4,4 @@ dependencies.lock
 sdkconfig.old
 .vscode
 *.patch
+cmake-build-debug/*

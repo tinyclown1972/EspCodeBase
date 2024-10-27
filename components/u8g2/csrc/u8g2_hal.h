@@ -30,4 +30,6 @@ extern u8g2_t u8g2;
  */
 u8g2_t *u8g2_hal_i2c_init(u8g2_hal_i2c_cfg_t cfg);
 
+void u8g2_hal_sleep();
+
 #endif // __U8G2_HAL

@@ -13,6 +13,9 @@
 #include "protocol_examples_common.h"
 #include <esp_http_server.h>
 #include "cJSON.h"
+#ifdef CONFIG_U8G2_ENABLE
+#include "u8g2_hal.h"
+#endif
 #ifdef CONFIG_RTE_EN
 #include "pump.h"
 #endif
@@ -72,6 +75,7 @@ static esp_err_t api_request_handler(const char *pParam)
     {
         /* PumpOff */
         ESP_LOGI(TAG, "request to stop in night");
+        u8g2_hal_sleep();
         RTESetgePumpStateMachine(PUMP_END);
     }
     else if(0 == strcmp("DayTime", pParam))
