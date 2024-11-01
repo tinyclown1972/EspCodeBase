@@ -48,7 +48,7 @@ static const httpd_uri_t hello = {
     .user_ctx  = NULL
 };
 
-static esp_err_t api_request_handler(const char *pParam)
+static esp_err_t api_request_handler(httpd_req_t *req, const char *pParam)
 {
     esp_err_t error = ESP_OK;
 
@@ -56,6 +56,9 @@ static esp_err_t api_request_handler(const char *pParam)
     {
         /* Reboot */
         ESP_LOGI(TAG, "Reboot request");
+        char resp[64];
+        snprintf(resp, sizeof(resp), "Succeed to request");
+        httpd_resp_send(req, resp, HTTPD_RESP_USE_STRLEN);
         vTaskDelay(1000/portTICK_PERIOD_MS);
         SystemRestart();
     }
@@ -134,7 +137,7 @@ static esp_err_t api_get_handler(httpd_req_t *req)
                 }
                 else
                 {
-                    if(ESP_OK != api_request_handler(param))
+                    if(ESP_OK != api_request_handler(req, param))
                     {
                         char resp[64];
                         snprintf(resp, sizeof(resp), "Failed to request");

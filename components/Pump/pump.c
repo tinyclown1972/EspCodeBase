@@ -77,7 +77,7 @@ void register_Pump(void)
 }
 #endif
 
-#define PUMP_STATE_MACHINE_PERIOD (250)
+#define PUMP_STATE_MACHINE_PERIOD (500)
 #define PUMP_CONTINUE_PUMP_TIME   (60 * (1000/PUMP_STATE_MACHINE_PERIOD))  /* 60S */
 
 #ifdef CONFIG_SR04_EN
