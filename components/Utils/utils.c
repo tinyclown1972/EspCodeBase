@@ -239,4 +239,29 @@ void SystemRestart()
     esp_restart();
 }
 
+bool GetTime(int *pi32Year, int *pi32Month, int *pi32Day, int *pi32Hour, int *pi32Min)
+{
+    bool bTimeSynced = false;
+    time_t now;
+    struct tm timeinfo;
+
+    time(&now);
+    localtime_r(&now, &timeinfo);
+    setenv("TZ", "CST-8", 1);
+    tzset();
+
+    *pi32Year = timeinfo.tm_year + 1900;
+    *pi32Month = timeinfo.tm_mon + 1;
+    *pi32Day = timeinfo.tm_mday;
+    *pi32Hour = timeinfo.tm_hour;
+    *pi32Min = timeinfo.tm_min;
+
+    if(*pi32Year > 2000)
+    {
+        bTimeSynced = true;
+    }
+
+    return bTimeSynced;
+}
+
 #endif

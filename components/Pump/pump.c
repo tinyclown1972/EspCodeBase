@@ -81,7 +81,7 @@ void register_Pump(void)
 #define PUMP_CONTINUE_PUMP_TIME   (60 * (1000/PUMP_STATE_MACHINE_PERIOD))  /* 60S */
 
 #ifdef CONFIG_SR04_EN
-#define SR04_WATER_THRESHOLD    (4)  /* In Range(ow+SR04_WATER_THRESHOLD, Low) will add water */
+#define SR04_WATER_THRESHOLD    (3)  /* In Range(ow+SR04_WATER_THRESHOLD, Low) will add water */
 #define SR04_ADD_CONFIRM        (10 * (1000/PUMP_STATE_MACHINE_PERIOD))
 #define SR04_SHUTDOWN_CONFIRM   (4 * (1000/PUMP_STATE_MACHINE_PERIOD))
 #endif
@@ -103,6 +103,7 @@ void PumpThread(void *pvParameter)
         static uint8_t u8ConfirmAddWater = 0U;
         static uint8_t u8ConfirmShut = 0U;
         uint8_t u8WaterLevel = RTEGetWaterLevel();
+
         int32_t i32HighVal = 0;
         int32_t i32LowVal  = 0;
 

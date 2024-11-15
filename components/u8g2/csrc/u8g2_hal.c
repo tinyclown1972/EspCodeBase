@@ -105,6 +105,12 @@ u8g2_t *u8g2_hal_i2c_init(u8g2_hal_i2c_cfg_t cfg)
 
 void u8g2_hal_sleep()
 {
-  u8g2_ClearDisplay(&u8g2);        // 清屏
-  u8g2_SetPowerSave(&u8g2, 1);     // Sleep屏幕  
+  static bool bSleeped = false;
+
+  if(false == bSleeped)
+  {
+    bSleeped = true;
+    u8g2_ClearDisplay(&u8g2);        // 清屏
+    u8g2_SetPowerSave(&u8g2, 1);     // Sleep屏幕
+  }
 }

@@ -80,7 +80,9 @@ void SR04Thread(void *pvParameter)
     uint8_t u8Counter = 0;
     uint8_t u8Tmp     = 0;
     uint8_t au8TempArray[10] = {0};
+    uint8_t u8Factor = 0;
     int     i4ScreenID = 0;
+    static uint8_t u8PreWater = 0;
 
     while(1)
     {
@@ -99,17 +101,42 @@ void SR04Thread(void *pvParameter)
         }
 
         double mean = calculate_mean(au8TempArray, 10);
-        RTESetWaterLevel((uint8_t)mean);
+        u8Tmp = (uint8_t)mean;
+
+        if(u8PreWater == 0)
+        {
+            u8PreWater = u8Tmp;
+        }
+        else
+        {
+            u8Factor = abs(u8Tmp - u8PreWater);
+            if(u8Factor >= 3)
+            {
+                u8Factor = 3;
+            }
+
+            if(u8Tmp > u8PreWater)
+            {
+                u8Tmp = u8PreWater + u8Factor;
+            }
+            else if(u8Tmp < u8PreWater)
+            {
+                u8Tmp = u8PreWater - u8Factor;
+            }
+            u8PreWater = u8Tmp;
+        }
+
+        RTESetWaterLevel(u8Tmp);
 
         i4ScreenID = HMI_GetActiveScreenId();
         // printf("ScreenID: %d\n",i4ScreenID);
         if(i4ScreenID == 1011)
         {
-            MainScreen_UpdateWaterLevel(DemoGetScrDev(), (uint8_t)mean);
+            MainScreen_UpdateWaterLevel(DemoGetScrDev(), u8Tmp);
         }
         else if(i4ScreenID == 1006)
         {
-            VariableBox_UpdateWaterLevel(DemoGetScrDev(), (uint8_t)mean);
+            VariableBox_UpdateWaterLevel(DemoGetScrDev(), u8Tmp);
         }
         else
         {

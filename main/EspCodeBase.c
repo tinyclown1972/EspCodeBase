@@ -53,6 +53,7 @@
 #endif
 
 #include "freertos/event_groups.h"
+#include "esp_sntp.h"
 
 #define TAG "EspCodeBase"
 
@@ -125,8 +126,13 @@ void DisplayTask(void* param)
 void app_main(void)
 {
     EventBits_t  u32Bits = 0U;
+    int i32Year = 0;
+    int i32Mon   = 0;
+    int i32Day   = 0;
+    int i32Hour  = 0;
+    int i32Min   = 0;
 
-#ifdef CONFIG_UTILS_EN
+    #ifdef CONFIG_UTILS_EN
     NvsFlashInit();
 #endif
 
@@ -148,7 +154,7 @@ void app_main(void)
 
 #if defined(CONFIG_U8G2_ENABLE) || defined(CONFIG_SSD1306_X_ENABLE)
 #ifdef CONFIG_SIMPLE_GUI_ENABLE
-    xTaskCreate(DisplayTask,"DisplayTask",2048,NULL,1,NULL);
+    xTaskCreate(DisplayTask,"DisplayTask",4096,NULL,1,NULL);
 #endif
 #endif
 
@@ -160,7 +166,6 @@ void app_main(void)
     xTaskCreate(MyWiFiInit,"InitWifiTask",4096,NULL,3,NULL);
 #endif
 
-    ESP_LOGI(TAG, "Hello world");
     while(true)
     {
 #ifdef CONFIG_WiFi_EN
@@ -179,6 +184,15 @@ void app_main(void)
 #ifdef CONFIG_M_DNS_EN
                 MyMDnsInit("miao");
 #endif
+                sntp_setoperatingmode(SNTP_OPMODE_POLL);
+                sntp_setservername(0, "210.72.145.44"); // 国家授时中心服务器 IP 地址
+                sntp_setservername(1, "ntp1.aliyun.com"); //阿里云ntp1服务
+                sntp_setservername(2, "pool.ntp.org");
+                sntp_setservername(3, "1.cn.pool.ntp.org");
+                sntp_setservername(5, "cn.ntp.org.cn");
+                sntp_init();
+                setenv("TZ", "CST-8", 1);
+                tzset();
             }
         }
         else
@@ -193,9 +207,22 @@ void app_main(void)
             }
         }
 #endif
+        if(true == GetTime(&i32Year, &i32Mon, &i32Day, &i32Hour, &i32Min))
+        {
+            if((i32Hour >= 23) || ((i32Hour >= 0) && (i32Hour < 8)))
+            {
+                /* Put Pump into Sleep Status */
+                // u8g2_hal_sleep();
+                RTESetgePumpStateMachine(PUMP_END);
+            }
+
+            if((i32Hour == 8) && (i32Min < 3))
+            {
+                SystemRestart();
+            }
+        }
         vTaskDelay(1000/portTICK_PERIOD_MS);
     }
-
     /* Should never run into here */
     SystemRestart();
 }

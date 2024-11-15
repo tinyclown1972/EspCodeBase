@@ -51,6 +51,12 @@ static const httpd_uri_t hello = {
 static esp_err_t api_request_handler(httpd_req_t *req, const char *pParam)
 {
     esp_err_t error = ESP_OK;
+    int i32Year = 0;
+    int i32Mon   = 0;
+    int i32Day   = 0;
+    int i32Hour  = 0;
+    int i32Min   = 0;
+    bool     bTimeSynced = false;
 
     if(0 == strcmp("Reboot", pParam))
     {
@@ -81,11 +87,33 @@ static esp_err_t api_request_handler(httpd_req_t *req, const char *pParam)
         u8g2_hal_sleep();
         RTESetgePumpStateMachine(PUMP_END);
     }
-    else if(0 == strcmp("DayTime", pParam))
+    else if(0 == strcmp("PumpStatus", pParam))
     {
-        /* PumpOff */
-        ESP_LOGI(TAG, "request to start in day time");
-        RTESetgePumpStateMachine(PUMP_INIT);
+        char resp[16];
+        bTimeSynced = GetTime(&i32Year, &i32Mon, &i32Day, &i32Hour, &i32Min);
+        if(4 == RTEGetgePumpStateMachine())
+        {
+            if(bTimeSynced)
+            {
+                snprintf(resp, sizeof(resp), "STDBY(SYNC)");
+            }
+            else
+            {
+                snprintf(resp, sizeof(resp), "STDBY");
+            }
+        }
+        else
+        {
+            if(bTimeSynced)
+            {
+                snprintf(resp, sizeof(resp), "NORMAL(SYNC)");
+            }
+            else
+            {
+                snprintf(resp, sizeof(resp), "NORMAL");
+            }
+        }
+        httpd_resp_send(req, resp, HTTPD_RESP_USE_STRLEN);
     }
     else
     {

@@ -36,6 +36,8 @@ void InfinityLoop();
 int GetDigitLength(int number);
 
 void NvsFlashInit(void);
+bool GetTime(int *pi32Year, int *pi32Month, int *pi32Day, int *pi32Hour, int *pi32Min);
+
 esp_err_t NvsFlashReadInt32(const char *nameSpace, const char *key,
                             int32_t *pi32Val);
 esp_err_t NvsFlashWriteInt32(const char *nameSpace, const char *key,
