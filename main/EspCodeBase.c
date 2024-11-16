@@ -209,6 +209,11 @@ void app_main(void)
 #endif
         if(true == GetTime(&i32Year, &i32Mon, &i32Day, &i32Hour, &i32Min))
         {
+            if(1 == sntp_enabled())
+            {
+                sntp_stop();
+            }
+
             if((i32Hour >= 23) || ((i32Hour >= 0) && (i32Hour < 8)))
             {
                 /* Put Pump into Sleep Status */
@@ -218,7 +223,7 @@ void app_main(void)
 
             if((i32Hour == 8) && (i32Min < 3))
             {
-                SystemRestart();
+                RTESetgePumpStateMachine(PUMP_INIT);
             }
         }
         vTaskDelay(1000/portTICK_PERIOD_MS);

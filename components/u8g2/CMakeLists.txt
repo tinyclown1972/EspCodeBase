@@ -5,7 +5,9 @@ file(GLOB COMPONENT_SRCS csrc/*.c)
 file(GLOB COMPONENT_HDRS csrc/*.h)
 
 if(COMMAND idf_component_register)
-    idf_component_register(SRCS "${COMPONENT_SRCS}" INCLUDE_DIRS csrc)
+    idf_component_register( SRCS "${COMPONENT_SRCS}"
+                            INCLUDE_DIRS csrc
+                            REQUIRES RTE)
     return()
 endif()
 

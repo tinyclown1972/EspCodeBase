@@ -18,6 +18,7 @@ RTE_VAR(int32_t, i32EmptyBowl, 450);
 RTE_VAR(int32_t, i32LowWaterBowl, 600);
 RTE_VAR(int32_t, i32HighWaterBowl, 850);
 RTE_VAR(uint8_t, WaterLevel, 0);
+RTE_VAR(uint8_t, DisplayOff, 0);
 
 #ifdef CONFIG_SR04_EN
 static int32_t gi32HighThreshold = 0;

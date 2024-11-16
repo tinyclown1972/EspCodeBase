@@ -9,6 +9,8 @@
 //=======================================================================//
 #include "DemoProc.h"
 
+#include <RTE.h>
+
 #include "esp_task.h"
 #include <freertos/task.h>
 
@@ -95,7 +97,7 @@ static u8g2_t *pu8g2 = NULL;
 
 void SSD1306SetPixel(SGUI_INT iX, SGUI_INT iY, SGUI_UINT iColor)
 {
-    if(pu8g2 != NULL)
+    if((pu8g2 != NULL) && (RTEGetDisplayOff() == 0U))
     {
         if(iColor)
         {
@@ -109,7 +111,7 @@ void SSD1306SetPixel(SGUI_INT iX, SGUI_INT iY, SGUI_UINT iColor)
 void SSD1306FillRect(SGUI_INT iX, SGUI_INT iY, SGUI_INT iWidth,
                      SGUI_INT iHeight, SGUI_UINT iColor)
 {
-    if(pu8g2 != NULL)
+    if((pu8g2 != NULL) && (RTEGetDisplayOff() == 0U))
     {
         u8g2_DrawBox(pu8g2, iX, iY, iWidth, iHeight);
     }
@@ -117,14 +119,14 @@ void SSD1306FillRect(SGUI_INT iX, SGUI_INT iY, SGUI_INT iWidth,
 
 void SSD1306Clear()
 {
-    if(pu8g2 != NULL)
+    if((pu8g2 != NULL) && (RTEGetDisplayOff() == 0U))
     {
         u8g2_ClearBuffer(pu8g2);
     }
 }
 void SSD1306SyncBuffer()
 {
-    if(pu8g2 != NULL)
+    if((pu8g2 != NULL) && (RTEGetDisplayOff() == 0U))
     {
         u8g2_SendBuffer(pu8g2);
     }

@@ -19,6 +19,7 @@ RTE_STAT(int32_t, i32EmptyBowl, 0);
 RTE_STAT(int32_t, i32LowWaterBowl, 0);
 RTE_STAT(int32_t, i32HighWaterBowl, 0);
 RTE_STAT(uint8_t, WaterLevel, 0);
+RTE_STAT(uint8_t, DisplayOff, 0);
 
 #ifdef CONFIG_SR04_EN
 int32_t RTEGetHighThreshold();
